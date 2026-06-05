@@ -11,3 +11,60 @@
   background-size: 300% 300%;
   animation: gradient 15s ease infinite;
 }
+
+/* Page transition animation */
+.page-anim {
+  animation: pageFade 320ms ease both;
+}
+
+@keyframes pageFade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Global button animations */
+button {
+  transition: transform 160ms cubic-bezier(.2,.9,.2,1), box-shadow 160ms ease, background-color 160ms ease;
+  will-change: transform, box-shadow;
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(14, 30, 120, 0.12);
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 20px rgba(2,6,23,0.12);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0) scale(0.995);
+}
+
+/* Toast and notification animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 300ms cubic-bezier(.2,.9,.2,1);
+}
+
+/* subtle utility for animated gradient backgrounds (keeps existing class) */
+.animated-gradient {
+  transition: background-position 1s ease;
+}
