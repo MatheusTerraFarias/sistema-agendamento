@@ -23,8 +23,8 @@ export default function Importar() {
   } = useImportacao();
 
   return (
-    <div className="page-anim min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
-      <div className="mx-auto max-w-7xl px-4">
+    <div className="page-anim min-h-full w-full min-w-0 max-w-full bg-gradient-to-br from-slate-50 to-slate-100 py-6 sm:py-8">
+      <div className="mx-auto w-full min-w-0 max-w-7xl px-0 sm:px-4">
         <div className="mb-8 rounded-3xl bg-white p-8 shadow-sm">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
@@ -36,8 +36,8 @@ export default function Importar() {
           </div>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-6">
+        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+          <div className="min-w-0 space-y-6">
             <ImportUpload
               fileName={fileName}
               uploadDate={uploadDate}
@@ -60,7 +60,7 @@ export default function Importar() {
             ) : null}
           </div>
 
-          <div className="rounded-3xl bg-white p-8 shadow-sm h-fit">
+          <div className="h-fit min-w-0 rounded-3xl bg-white p-8 shadow-sm">
             <h2 className="text-2xl font-bold text-slate-900">Como funciona</h2>
             <ul className="mt-6 space-y-4 text-slate-700 text-sm leading-relaxed">
               <li className="flex gap-3">

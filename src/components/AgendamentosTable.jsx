@@ -81,7 +81,7 @@ export default function AgendamentosTable({
 
   if (loading) {
     return (
-      <div className="w-full max-w-full overflow-x-auto rounded-3xl border border-slate-200">
+      <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-3xl border border-slate-200">
         <table className="w-full min-w-[900px] border-collapse bg-white text-left text-sm text-slate-900">
           <thead className="bg-slate-100 text-slate-700">
             <tr>
@@ -117,9 +117,9 @@ export default function AgendamentosTable({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="w-full min-w-0 max-w-full space-y-4">
       {selectedIds.size > 0 && (
-        <div className="rounded-lg bg-sky-50 border border-sky-200 p-4 flex items-center justify-between">
+        <div className="flex w-full min-w-0 flex-col gap-3 rounded-lg border border-sky-200 bg-sky-50 p-4 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-sm font-medium text-sky-800">{selectedIds.size} agendamento(s) selecionado(s)</span>
           <button
             onClick={handleBulkCancel}
@@ -130,7 +130,7 @@ export default function AgendamentosTable({
         </div>
       )}
 
-      <div className="w-full max-w-full overflow-x-auto rounded-3xl border border-slate-200">
+      <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-3xl border border-slate-200">
         <table className="w-full min-w-[900px] border-collapse bg-white text-left text-sm text-slate-900">
           <thead className="bg-slate-100 text-slate-700">
             <tr>

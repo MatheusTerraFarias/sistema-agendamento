@@ -1,9 +1,19 @@
+import { createPortal } from "react-dom";
+
+const SUMMARY_CARDS = [
+  ["Total", "total", "bg-slate-50 text-slate-900", "text-slate-500"],
+  ["Novos", "novos", "bg-emerald-50 text-emerald-900", "text-emerald-700"],
+  ["Atualizados", "atualizados", "bg-sky-50 text-sky-900", "text-sky-700"],
+  ["Ignorados", "ignorados", "bg-amber-50 text-amber-900", "text-amber-700"],
+  ["Erros", "erros", "bg-rose-50 text-rose-900", "text-rose-700"],
+];
+
 export default function ImportResultModal({ report, onClose }) {
   if (!report) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 px-4 py-8">
-      <div className="w-full max-w-2xl rounded-3xl bg-white p-8 shadow-2xl">
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/60 px-4 py-4 sm:py-8">
+      <div className="my-auto w-full max-w-2xl rounded-3xl bg-white p-5 shadow-2xl sm:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
           <div>
             <h2 className="text-3xl font-bold text-slate-900">Importação concluída</h2>
@@ -18,27 +28,13 @@ export default function ImportResultModal({ report, onClose }) {
           </button>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-5 mb-6">
-          <div className="rounded-3xl bg-slate-50 p-5 text-center">
-            <p className="text-sm uppercase tracking-[0.2em] text-slate-500">Total</p>
-            <p className="mt-3 text-3xl font-semibold text-slate-900">{report.total}</p>
-          </div>
-          <div className="rounded-3xl bg-emerald-50 p-5 text-center">
-            <p className="text-sm uppercase tracking-[0.2em] text-emerald-700">Novos</p>
-            <p className="mt-3 text-3xl font-semibold text-emerald-900">{report.novos}</p>
-          </div>
-          <div className="rounded-3xl bg-sky-50 p-5 text-center">
-            <p className="text-sm uppercase tracking-[0.2em] text-sky-700">Atualizados</p>
-            <p className="mt-3 text-3xl font-semibold text-sky-900">{report.atualizados}</p>
-          </div>
-          <div className="rounded-3xl bg-amber-50 p-5 text-center">
-            <p className="text-sm uppercase tracking-[0.2em] text-amber-700">Ignorados</p>
-            <p className="mt-3 text-3xl font-semibold text-amber-900">{report.ignorados}</p>
-          </div>
-          <div className="rounded-3xl bg-rose-50 p-5 text-center">
-            <p className="text-sm uppercase tracking-[0.2em] text-rose-700">Erros</p>
-            <p className="mt-3 text-3xl font-semibold text-rose-900">{report.erros}</p>
-          </div>
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5 sm:gap-4">
+          {SUMMARY_CARDS.map(([label, key, colors, titleColor]) => (
+            <div key={key} className={`flex h-28 min-w-0 flex-col items-center justify-center gap-1 rounded-3xl px-2 text-center ${colors}`}>
+              <p className={`w-full truncate text-xs font-semibold uppercase tracking-[0.08em] ${titleColor}`}>{label}</p>
+              <p className="text-4xl font-bold leading-none">{report[key]}</p>
+            </div>
+          ))}
         </div>
 
         {report.errorDetails?.length ? (
@@ -55,6 +51,7 @@ export default function ImportResultModal({ report, onClose }) {
           </div>
         ) : null}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

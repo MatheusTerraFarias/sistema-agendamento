@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { FaPlus, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Button from "../components/ui/Button";
@@ -139,12 +140,12 @@ export default function Agendamentos() {
   return (
     <div className="page-anim min-h-full w-full min-w-0 max-w-full bg-slate-100 py-6 sm:py-8">
       <div className="mx-auto w-full min-w-0 max-w-7xl px-0 sm:px-4">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-          <div>
+        <div className="mb-6 flex min-w-0 flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="min-w-0">
             <h1 className="text-3xl font-bold text-slate-900">Agendamentos</h1>
             <p className="text-slate-600 mt-2">Bem-vindo, {currentUserName}. Gerencie seus chamados com rapidez.</p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex shrink-0 flex-wrap gap-3">
             <Button onClick={handleCreate} variant="primary">
               <FaPlus /> Novo agendamento
             </Button>
@@ -186,8 +187,8 @@ export default function Agendamentos() {
         </div>
 
         <div className="w-full min-w-0 rounded-3xl bg-white p-4 shadow-sm sm:p-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="mb-6 flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
               {FILTERS.map((item) => (
                 <button
                   key={item.key}
@@ -229,7 +230,7 @@ export default function Agendamentos() {
         </div>
       </div>
 
-      {modalOpen ? (
+      {modalOpen ? createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/50 px-4 py-4 sm:py-6">
           <div className="my-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
             <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
@@ -263,10 +264,11 @@ export default function Agendamentos() {
               />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       ) : null}
 
-      {reatribuirData ? (
+      {reatribuirData ? createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/50 px-4 py-4 sm:py-6">
           <div className="my-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
             <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
@@ -293,7 +295,8 @@ export default function Agendamentos() {
               />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       ) : null}
     </div>
   );

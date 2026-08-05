@@ -5,7 +5,12 @@ import { supabase } from "../lib/supabase";
 const REQUIRED_COLUMNS = ["protocolo", "cliente_nome", "telefone", "data_agendamento"];
 const HEADER_ALIASES = {
   protocolo: "protocolo",
+  n_protocolo: "protocolo",
+  no_protocolo: "protocolo",
+  numero_protocolo: "protocolo",
+  numero_do_protocolo: "protocolo",
   protocolo_numero: "protocolo",
+  codigo: "protocolo",
   cliente: "cliente_nome",
   cliente_nome: "cliente_nome",
   cliente_nome_completo: "cliente_nome",
@@ -54,6 +59,22 @@ function getMappedHeader(header) {
   return HEADER_ALIASES[header] || header;
 }
 
+function normalizeCellValue(value) {
+  if (value === undefined || value === null) return "";
+  return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : value;
+}
+
+function getCellValue(cell) {
+  // Formula cells with no calculated value are intentionally treated as empty.
+  if (!cell || cell.v === undefined || cell.v === null) return "";
+  return normalizeCellValue(cell.v);
+}
+
+function displayValue(value) {
+  const normalized = normalizeCellValue(value);
+  return normalized === "" ? "(vazio)" : `"${String(normalized)}"`;
+}
+
 function isValidDate(value) {
   return Boolean(parseDateValue(value));
 }
@@ -68,19 +89,11 @@ function parseTime(value) {
   }
 
   if (typeof value === "number") {
-    if (value >= 1) {
-      const date = parseExcelDate(value);
-      if (date && !Number.isNaN(date.getTime())) {
-        const hour = String(date.getHours()).padStart(2, "0");
-        const minute = String(date.getMinutes()).padStart(2, "0");
-        return `${hour}:${minute}`;
-      }
-    } else {
-      const totalSeconds = Math.round(value * 86400);
-      const hour = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-      const minute = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-      return `${hour}:${minute}`;
-    }
+    const fraction = ((value % 1) + 1) % 1;
+    const totalMinutes = Math.round(fraction * 1440) % 1440;
+    const hour = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+    const minute = String(totalMinutes % 60).padStart(2, "0");
+    return `${hour}:${minute}`;
   }
 
   const normalized = String(value || "").trim();
@@ -103,12 +116,8 @@ function parseTime(value) {
 }
 
 function parseExcelDate(serial) {
-  if (typeof serial !== "number") return null;
-  const utcDays = Math.floor(serial - 25569);
-  const utcValue = utcDays * 86400;
-  const dateInfo = new Date(utcValue * 1000);
-  dateInfo.setMinutes(dateInfo.getMinutes() + dateInfo.getTimezoneOffset());
-  return dateInfo;
+  if (typeof serial !== "number" || !Number.isFinite(serial) || serial < 1) return null;
+  return new Date(Math.round((serial - 25569) * 86400000));
 }
 
 function parseDateValue(value) {
@@ -127,11 +136,15 @@ function parseDateValue(value) {
   if (slashMatch) {
     const [, day, month, year] = slashMatch;
     const paddedYear = year.length === 2 ? `20${year}` : year;
-    return new Date(`${paddedYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`);
+    return new Date(Date.UTC(Number(paddedYear), Number(month) - 1, Number(day)));
   }
 
   const iso = new Date(normalized);
   return Number.isNaN(iso.getTime()) ? null : iso;
+}
+
+function formatDateForDatabase(date) {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
 }
 
 function getSheetHeaders(sheet) {
@@ -140,7 +153,7 @@ function getSheetHeaders(sheet) {
 
   for (let col = range.s.c; col <= range.e.c; col += 1) {
     const cell = sheet[utils.encode_cell({ r: range.s.r, c: col })];
-    headerRow.push(cell ? String(cell.v || "").trim() : "");
+    headerRow.push(String(getCellValue(cell) || "").trim());
   }
 
   return { headerRow, range };
@@ -156,8 +169,8 @@ function findLastUsedRow(sheet, headerRow, range) {
       if (!mappedKey) continue;
 
       const cell = sheet[utils.encode_cell({ r: row, c: col })];
-      const value = cell ? cell.v : "";
-      if (value !== undefined && value !== null && String(value).trim() !== "") {
+      const value = getCellValue(cell);
+      if (value !== "") {
         hasValueInRow = true;
         break;
       }
@@ -181,7 +194,7 @@ function getSheetRows(sheet, headerRow, range) {
   const lastUsedRow = findLastUsedRow(sheet, headerRow, range);
 
   for (let row = range.s.r + 1; row <= lastUsedRow; row += 1) {
-    const parsed = { _rowNumber: row + 1 };
+    const parsed = { _rowNumber: row + 1, _sourceColumns: {} };
     let hasValue = false;
 
     for (let col = range.s.c; col <= range.e.c; col += 1) {
@@ -190,9 +203,10 @@ function getSheetRows(sheet, headerRow, range) {
       if (!mappedKey) continue;
 
       const cell = sheet[utils.encode_cell({ r: row, c: col })];
-      const value = cell ? cell.v : "";
+      const value = getCellValue(cell);
       parsed[mappedKey] = value;
-      if (value !== undefined && value !== null && value !== "") {
+      parsed._sourceColumns[mappedKey] = originalHeader;
+      if (value !== "") {
         hasValue = true;
       }
     }
@@ -613,7 +627,9 @@ export function useImportacao() {
       }));
 
       // Pre-fetch existing protocols em lotes para evitar query demasiado longa
-      const protocolSet = [...new Set(rowsToProcess.map((row) => String(row.protocolo || "").trim()).filter(Boolean))];
+      const protocolSet = [
+        ...new Set(rowsToProcess.map((row) => String(normalizeCellValue(row.protocolo))).filter(Boolean)),
+      ];
       const existsData = await fetchExistingProtocols(protocolSet);
 
       const existingByProtocol = (existsData || []).reduce((acc, item) => {
@@ -637,16 +653,18 @@ export function useImportacao() {
         const batch = rowsToProcess.slice(i, i + batchSize);
 
         const promises = batch.map(async (row) => {
-          const protocolo = String(row.protocolo || "").trim();
-          const clienteNome = String(row.cliente_nome || "").trim();
-          const telefone = String(row.telefone || "").trim();
+          const protocolo = String(normalizeCellValue(row.protocolo));
+          const clienteNome = String(normalizeCellValue(row.cliente_nome));
+          const telefone = String(normalizeCellValue(row.telefone));
           const status = normalizeStatus(row.status);
           const dataAgendamento = parseDateValue(row.data_agendamento);
           const horaAgendamento = parseTime(row.hora_agendamento);
 
           if (!protocolo) {
             summary.erros += 1;
-            summary.errorDetails.push(`Linha ${row._rowNumber}: protocolo ausente.`);
+            summary.errorDetails.push(
+              `Linha ${row._rowNumber}: protocolo rejeitado. Coluna "${row._sourceColumns?.protocolo || "protocolo"}", valor ${displayValue(row.protocolo)}; motivo: célula vazia ou fórmula sem resultado.`
+            );
             return;
           }
 
@@ -657,7 +675,7 @@ export function useImportacao() {
           }
 
           const createdAt = new Date().toISOString();
-          const formattedDate = dataAgendamento.toISOString();
+          const formattedDate = formatDateForDatabase(dataAgendamento);
           const existing = existingByProtocol[protocolo];
 
           if (existing) {

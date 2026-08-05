@@ -1,3 +1,33 @@
+function formatPreviewDate(value) {
+  if (value === undefined || value === null || String(value).trim() === "") return "";
+
+  if (typeof value === "number") {
+    if (value < 1) return "";
+    const date = new Date(Math.round((value - 25569) * 86400000));
+    return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+  }
+
+  const normalized = String(value).trim();
+  const match = normalized.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+  if (match) {
+    const [, day, month, year] = match;
+    return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year.length === 2 ? `20${year}` : year}`;
+  }
+
+  const date = new Date(normalized);
+  return Number.isNaN(date.getTime()) ? normalized : date.toLocaleDateString("pt-BR", { timeZone: "UTC" });
+}
+
+function formatPreviewTime(value) {
+  if (value === undefined || value === null || String(value).trim() === "") return "";
+  if (typeof value === "number") {
+    const minutes = Math.round((((value % 1) + 1) % 1) * 1440) % 1440;
+    return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+  }
+  const match = String(value).trim().match(/^(\d{1,2}):(\d{2})/);
+  return match ? `${match[1].padStart(2, "0")}:${match[2]}` : String(value).trim();
+}
+
 export default function ImportPreview({ rows }) {
   const showService = rows.some((row) => Boolean(row.servico_nome));
   const showHour = rows.some((row) => Boolean(row.hora_agendamento));
@@ -11,8 +41,8 @@ export default function ImportPreview({ rows }) {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
+      <div className="w-full max-w-full overflow-x-auto">
+        <table className="w-full min-w-[720px] divide-y divide-slate-200 text-sm">
           <thead className="bg-slate-50 text-slate-700">
             <tr>
               <th className="whitespace-nowrap px-4 py-3 text-left font-semibold">Protocolo</th>
@@ -32,15 +62,13 @@ export default function ImportPreview({ rows }) {
                 <td className="whitespace-nowrap px-4 py-3 text-slate-700">{row.telefone}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-slate-700">{row.status}</td>
                 <td className="whitespace-nowrap px-4 py-3 text-slate-700">
-                  {isNaN(new Date(row.data_agendamento).getTime())
-                    ? String(row.data_agendamento || "-")
-                    : new Date(row.data_agendamento).toLocaleDateString()}
+                  {formatPreviewDate(row.data_agendamento) || "-"}
                 </td>
                 {showService ? (
                   <td className="whitespace-nowrap px-4 py-3 text-slate-700">{row.servico_nome || "-"}</td>
                 ) : null}
                 {showHour ? (
-                  <td className="whitespace-nowrap px-4 py-3 text-slate-700">{row.hora_agendamento || "-"}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-slate-700">{formatPreviewTime(row.hora_agendamento) || "-"}</td>
                 ) : null}
               </tr>
             ))}

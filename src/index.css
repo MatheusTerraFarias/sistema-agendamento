@@ -15,11 +15,6 @@ body,
   max-width: 100%;
 }
 
-html,
-body {
-  overflow-x: hidden;
-}
-
 .animated-gradient {
   background: linear-gradient(
     -45deg,
