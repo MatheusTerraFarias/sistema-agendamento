@@ -74,7 +74,7 @@ export default function Agendamentos() {
       agendamentos.map((item) => {
         const cliente = clienteMap.get(item.cliente_id);
         const servico = servicoMap.get(item.servico_id);
-        const atendente = atendenteMap.get(item.criado_por);
+        const atendente = atendenteMap.get(item.criado_por) || atendenteMap.get(item.distribuido_para);
 
         return {
           ...item,

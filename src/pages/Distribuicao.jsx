@@ -1,11 +1,10 @@
 ﻿import { useEffect, useState } from "react";
-import { FaRandom, FaSave, FaTrash, FaCheckCircle, FaExchangeAlt } from "react-icons/fa";
+import { FaRandom, FaSave, FaTrash, FaCheckCircle } from "react-icons/fa";
 import { useDistribuicao } from "../hooks/useDistribuicao";
 import DistributionPreview from "../components/DistributionPreview";
 
 export default function Distribuicao() {
   const {
-    agendamentos,
     atendentes,
     regras,
     loading,

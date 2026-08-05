@@ -238,7 +238,7 @@ export function useDistribuicao() {
         const atendenteId = fila[idx];
         return supabase
           .from("agendamentos")
-          .update({ distribuido_para: atendenteId, updated_at: new Date().toISOString() })
+          .update({ distribuido_para: atendenteId, criado_por: atendenteId, updated_at: new Date().toISOString() })
           .eq("id", ag.id)
           .then(({ error }) => {
             if (error) { erros++; console.error(error); }
