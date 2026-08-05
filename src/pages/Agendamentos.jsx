@@ -36,6 +36,7 @@ export default function Agendamentos() {
     cancelAgendamento,
     cancelAgendamentos,
     reatribuirAgendamento,
+    reatribuirAgendamentos,
   } = useAgendamentos();
 
   const [filter, setFilter] = useState("todos");
@@ -135,6 +136,17 @@ export default function Agendamentos() {
     setReatribuirData(null);
   }
 
+  function handleBulkReatribuir(ids) {
+    const selected = enrichedAgendamentos.filter((item) => ids.includes(item.id));
+    setReatribuirData({ bulk: true, items: selected });
+  }
+
+  async function handleBulkReatribuirSubmit(ids, atendenteId, motivo) {
+    await reatribuirAgendamentos(ids, atendenteId, motivo);
+    setFeedback({ type: "success", message: `${ids.length} agendamento(s) reatribuído(s).` });
+    setReatribuirData(null);
+  }
+
   const currentUserName = profile?.nome || "Usuário";
 
   return (
@@ -224,6 +236,7 @@ export default function Agendamentos() {
             onCancel={handleCancel}
             onReatribuir={(item) => setReatribuirData(item)}
             onBulkAction={handleBulkAction}
+            onBulkReatribuir={handleBulkReatribuir}
             isSupervisor={isSupervisor}
           />
           {error ? <div className="mt-4 text-sm text-rose-600">{error}</div> : null}
@@ -288,8 +301,9 @@ export default function Agendamentos() {
               <ReatribuirModal
                 key={reatribuirData?.id || "reatribuir"}
                 agendamento={reatribuirData}
+                agendamentos={reatribuirData?.items || []}
                 atendentes={atendentes}
-                onSubmit={handleReatribuir}
+                onSubmit={reatribuirData?.bulk ? handleBulkReatribuirSubmit : handleReatribuir}
                 onClose={() => setReatribuirData(null)}
                 loading={loading}
               />

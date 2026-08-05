@@ -1,20 +1,21 @@
 import { useState } from "react";
 
-export default function ReatribuirModal({ agendamento, atendentes, onSubmit, onClose, loading }) {
-  const [selectedAtendente, setSelectedAtendente] = useState(agendamento?.criado_por || "");
+export default function ReatribuirModal({ agendamento, agendamentos = [], atendentes, onSubmit, onClose, loading }) {
+  const isBulk = agendamentos.length > 0;
+  const [selectedAtendente, setSelectedAtendente] = useState(isBulk ? "" : agendamento?.criado_por || "");
   const [motivo, setMotivo] = useState("");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!selectedAtendente || !motivo.trim()) return;
-    await onSubmit(agendamento.id, selectedAtendente, motivo.trim());
+    await onSubmit(isBulk ? agendamentos.map((item) => item.id) : agendamento.id, selectedAtendente, motivo.trim());
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <p className="text-sm text-slate-500">Agendamento:</p>
-        <p className="mt-1 text-base font-semibold text-slate-900">{agendamento?.cliente_nome || `#${agendamento?.id}`}</p>
+        <p className="text-sm text-slate-500">{isBulk ? "Agendamentos selecionados:" : "Agendamento:"}</p>
+        <p className="mt-1 text-base font-semibold text-slate-900">{isBulk ? `${agendamentos.length} registros serão reatribuídos` : agendamento?.cliente_nome || `#${agendamento?.id}`}</p>
         <p className="text-sm text-slate-600">Telefone: {agendamento?.telefone || "—"}</p>
       </div>
 

@@ -286,6 +286,7 @@ export function useAgendamentos() {
     const values = {
       cliente_id: payload.cliente_id,
       servico_id: payload.servico_id,
+      area: payload.area || null,
       data_agendamento: payload.data_agendamento,
       hora_agendamento: payload.hora_agendamento,
       status: "novo",
@@ -353,6 +354,10 @@ export function useAgendamentos() {
   }
 
   async function reatribuirAgendamento(id, paraAtendenteId, motivo) {
+    if (Array.isArray(id)) {
+      return reatribuirAgendamentos(id, paraAtendenteId, motivo);
+    }
+
     setLoading(true);
     setError(null);
 
@@ -389,6 +394,45 @@ export function useAgendamentos() {
     return true;
   }
 
+  async function reatribuirAgendamentos(ids = [], paraAtendenteId, motivo) {
+    if (!ids.length || !paraAtendenteId || !motivo?.trim()) return null;
+
+    setLoading(true);
+    setError(null);
+    const { data: selected, error: fetchError } = await supabase
+      .from("agendamentos")
+      .select("id,criado_por,observacao")
+      .in("id", ids);
+
+    if (fetchError) {
+      setError(fetchError.message);
+      setLoading(false);
+      return null;
+    }
+
+    const target = atendentes.find((user) => user.id === paraAtendenteId);
+    const now = new Date().toISOString();
+    const results = await Promise.all((selected || []).map((item) => {
+      const source = atendentes.find((user) => user.id === item.criado_por);
+      const note = `Reatribuído de ${source?.nome || "desconhecido"} para ${target?.nome || "desconhecido"}: ${motivo.trim()}`;
+      return supabase.from("agendamentos").update({
+        criado_por: paraAtendenteId,
+        observacao: item.observacao ? `${item.observacao}\n${note}` : note,
+        updated_at: now,
+      }).eq("id", item.id);
+    }));
+    const failed = results.find((result) => result.error);
+    if (failed?.error) {
+      setError(failed.error.message);
+      setLoading(false);
+      return null;
+    }
+
+    await loadAgendamentos();
+    setLoading(false);
+    return true;
+  }
+
   return {
     session,
     profile,
@@ -407,6 +451,7 @@ export function useAgendamentos() {
     cancelAgendamento,
     cancelAgendamentos,
     reatribuirAgendamento,
+    reatribuirAgendamentos,
     createUsuario,
   };
 }

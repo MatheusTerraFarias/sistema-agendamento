@@ -7,6 +7,7 @@ export default function Header({ title = "Dashboard", session, profile }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -48,10 +49,24 @@ export default function Header({ title = "Dashboard", session, profile }) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          <button className="relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition group">
+          <div className="relative">
+          <button
+            type="button"
+            onClick={() => setNotificationsOpen((open) => !open)}
+            aria-expanded={notificationsOpen}
+            aria-label="Abrir notificações"
+            className="relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition group"
+          >
             <FaBell size={16} />
             <span className="absolute top-1 right-1 h-2 w-2 bg-rose-500 rounded-full group-hover:scale-125 transition" />
           </button>
+          {notificationsOpen ? (
+            <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
+              <p className="font-semibold text-slate-900">Notificações</p>
+              <p className="mt-2 text-sm text-slate-600">Nenhuma nova notificação no momento.</p>
+            </div>
+          ) : null}
+          </div>
 
           <div className="flex items-center gap-2 border-l border-slate-200 pl-3 sm:gap-3 sm:pl-4">
             <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center text-xs font-semibold text-white">

@@ -46,6 +46,7 @@ export default function AgendamentosTable({
   onReatribuir,
   isSupervisor,
   onBulkAction,
+  onBulkReatribuir,
 }) {
   const [selectedIds, setSelectedIds] = useState(new Set());
 
@@ -79,10 +80,15 @@ export default function AgendamentosTable({
     }
   }, [selectedIds, onBulkAction]);
 
+  const handleBulkReatribuir = useCallback(() => {
+    if (!selectedIds.size) return;
+    onBulkReatribuir?.(Array.from(selectedIds));
+  }, [selectedIds, onBulkReatribuir]);
+
   if (loading) {
     return (
       <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-3xl border border-slate-200">
-        <table className="w-full min-w-[900px] border-collapse bg-white text-left text-sm text-slate-900">
+        <table className="w-full min-w-[1020px] border-collapse bg-white text-left text-sm text-slate-900">
           <thead className="bg-slate-100 text-slate-700">
             <tr>
               <th className="px-6 py-4 font-semibold w-12">
@@ -93,6 +99,7 @@ export default function AgendamentosTable({
               <th className="px-6 py-4 font-semibold">Data</th>
               <th className="px-6 py-4 font-semibold">Hora</th>
               <th className="px-6 py-4 font-semibold">Status</th>
+              <th className="px-6 py-4 font-semibold">Bairro</th>
               <th className="px-6 py-4 font-semibold">Atendente</th>
               <th className="px-6 py-4 font-semibold">Ações</th>
             </tr>
@@ -121,17 +128,21 @@ export default function AgendamentosTable({
       {selectedIds.size > 0 && (
         <div className="flex w-full min-w-0 flex-col gap-3 rounded-lg border border-sky-200 bg-sky-50 p-4 sm:flex-row sm:items-center sm:justify-between">
           <span className="text-sm font-medium text-sky-800">{selectedIds.size} agendamento(s) selecionado(s)</span>
-          <button
-            onClick={handleBulkCancel}
-            className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 active:scale-95"
-          >
-            <FaTimesCircle /> Cancelar selecionados
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {isSupervisor ? (
+              <button onClick={handleBulkReatribuir} className="inline-flex items-center gap-2 rounded-lg bg-amber-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-800 active:scale-95">
+                <FaExchangeAlt /> Reatribuir selecionados
+              </button>
+            ) : null}
+            <button onClick={handleBulkCancel} className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700 active:scale-95">
+              <FaTimesCircle /> Cancelar selecionados
+            </button>
+          </div>
         </div>
       )}
 
       <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-3xl border border-slate-200">
-        <table className="w-full min-w-[900px] border-collapse bg-white text-left text-sm text-slate-900">
+        <table className="w-full min-w-[1020px] border-collapse bg-white text-left text-sm text-slate-900">
           <thead className="bg-slate-100 text-slate-700">
             <tr>
               <th className="px-6 py-4 font-semibold w-12">
@@ -147,6 +158,7 @@ export default function AgendamentosTable({
               <th className="px-6 py-4 font-semibold">Data</th>
               <th className="px-6 py-4 font-semibold">Hora</th>
               <th className="px-6 py-4 font-semibold">Status</th>
+              <th className="px-6 py-4 font-semibold">Bairro</th>
               <th className="px-6 py-4 font-semibold">Atendente</th>
               <th className="px-6 py-4 font-semibold">Ações</th>
             </tr>
@@ -182,6 +194,7 @@ export default function AgendamentosTable({
                     {getStatusLabel(item.status)}
                   </span>
                 </td>
+                <td className="px-6 py-4 text-sm text-slate-600">{item.area || "—"}</td>
                 <td className="px-6 py-4 text-sm text-slate-600">{item.atendente_nome || "Sem atendente"}</td>
                 <td className="px-6 py-4">
                   <div className="flex flex-wrap gap-1.5">

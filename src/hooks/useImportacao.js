@@ -43,6 +43,11 @@ const HEADER_ALIASES = {
   numero_os: "protocolo",
   numero_da_os: "protocolo",
   codigo_contrato: "protocolo",
+  territorio_sp: "area",
+  territorio: "area",
+  grupo_de_regioes: "area",
+  grupo_regioes: "area",
+  bairro: "area",
 };
 
 function normalizeHeader(value) {
@@ -765,6 +770,7 @@ export function useImportacao() {
             const insertPayload = {
               cliente_id: clienteId,
               servico_id: selectedService?.id || defaultService?.id || null,
+              area: String(normalizeCellValue(row.area)) || null,
               data_agendamento: formattedDate,
               hora_agendamento: horaAgendamento || "00:00",
               status: "novo",
