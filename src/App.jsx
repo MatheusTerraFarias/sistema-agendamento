@@ -5,7 +5,6 @@ import Dashboard from "./pages/Dashboard";
 import Agendamentos from "./pages/Agendamentos";
 import Clientes from "./pages/Clientes";
 import Configuracoes from "./pages/Configuracoes";
-import Configuracoes from ". /pages/Configuracoes";
 import Distribuicao from "./pages/Distribuicao";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BackToDashboard from "./components/BackToDashboard";

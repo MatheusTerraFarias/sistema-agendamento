@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FaHome, FaCalendarAlt, FaUsers, FaFileImport, FaCog, FaChevronLeft, FaChevronRight, FaRandom } from "react-icons/fa";
 
@@ -10,7 +10,7 @@ export default function Sidebar({ profile }) {
     { to: "/dashboard", label: "Dashboard", icon: FaHome },
     { to: "/agendamentos", label: "Agendamentos", icon: FaCalendarAlt },
     { to: "/clientes", label: "Clientes", icon: FaUsers },
-    { to: "/importar", label: ImportaÃ§Ã£o, icon: FaFileImport },
+    { to: "/importar", label: "Importação", icon: FaFileImport },
     { to: "/distribuicao", label: "Distribuição", icon: FaRandom },
     { to: "/configuracoes", label: "Configurações", icon: FaCog },
   ];
