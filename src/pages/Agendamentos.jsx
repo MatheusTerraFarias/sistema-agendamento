@@ -230,9 +230,9 @@ export default function Agendamentos() {
       </div>
 
       {modalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 py-8">
-          <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/50 px-4 py-4 sm:py-6">
+          <div className="my-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
+            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">{editData ? "Editar agendamento" : "Novo agendamento"}</h2>
                 <p className="text-sm text-slate-500">Preencha os dados do cliente para criar um chamado.</p>
@@ -248,26 +248,28 @@ export default function Agendamentos() {
                 Fechar
               </button>
             </div>
-            <AgendamentoForm
-              key={editData?.id || "new"}
-              initialData={editData}
-              clientes={clientes}
-              servicos={servicos}
-              onSubmit={handleSubmit}
-              onClose={() => {
-                setModalOpen(false);
-                setEditData(null);
-              }}
-              loading={loading}
-            />
+            <div className="overflow-y-auto px-5 py-4 sm:px-6">
+              <AgendamentoForm
+                key={editData?.id || "new"}
+                initialData={editData}
+                clientes={clientes}
+                servicos={servicos}
+                onSubmit={handleSubmit}
+                onClose={() => {
+                  setModalOpen(false);
+                  setEditData(null);
+                }}
+                loading={loading}
+              />
+            </div>
           </div>
         </div>
       ) : null}
 
       {reatribuirData ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 px-4 py-8">
-          <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/50 px-4 py-4 sm:py-6">
+          <div className="my-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
+            <div className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
               <div>
                 <h2 className="text-2xl font-bold text-slate-900">Reatribuir atendente</h2>
                 <p className="text-sm text-slate-500">Escolha um novo atendente e registre o motivo.</p>
@@ -280,14 +282,16 @@ export default function Agendamentos() {
                 Fechar
               </button>
             </div>
-            <ReatribuirModal
-              key={reatribuirData?.id || "reatribuir"}
-              agendamento={reatribuirData}
-              atendentes={atendentes}
-              onSubmit={handleReatribuir}
-              onClose={() => setReatribuirData(null)}
-              loading={loading}
-            />
+            <div className="overflow-y-auto px-5 py-4 sm:px-6">
+              <ReatribuirModal
+                key={reatribuirData?.id || "reatribuir"}
+                agendamento={reatribuirData}
+                atendentes={atendentes}
+                onSubmit={handleReatribuir}
+                onClose={() => setReatribuirData(null)}
+                loading={loading}
+              />
+            </div>
           </div>
         </div>
       ) : null}
