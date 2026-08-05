@@ -4,8 +4,9 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Agendamentos from "./pages/Agendamentos";
 import Clientes from "./pages/Clientes";
-import Importar from "./pages/Importar";
 import Configuracoes from "./pages/Configuracoes";
+import Configuracoes from ". /pages/Configuracoes";
+import Distribuicao from "./pages/Distribuicao";
 import ProtectedRoute from "./components/ProtectedRoute";
 import BackToDashboard from "./components/BackToDashboard";
 
@@ -47,6 +48,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/distribuicao" element={<ProtectedRoute><Distribuicao /></ProtectedRoute>} />
         <Route
           path="/configuracoes"
           element={

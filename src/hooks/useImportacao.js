@@ -393,36 +393,37 @@ async function findOrCreateCliente({ nome, telefone }, currentUserId = null) {
     throw new Error("Cliente sem nome ou telefone não pode ser criado.");
   }
 
-  const query = supabase.from("clientes").select("id,nome,telefone").limit(1);
-  let resultPayload;
+  const normalizedPhone = telefone ? String(telefone).replace(/\D/g, "") : null;
+  const trimmedNome = nome ? String(nome).trim() : null;
 
-  if (telefone) {
-    const normalizedPhone = String(telefone).replace(/\D/g, "");
-    resultPayload = await query.ilike("telefone", `%${normalizedPhone}%`);
-  } else {
-    resultPayload = await query.ilike("nome", `%${nome}%`);
+  // 1) Busca por telefone normalizado
+  if (normalizedPhone) {
+    const { data, error } = await supabase
+      .from("clientes")
+      .select("id,telefone")
+      .ilike("telefone", `%${normalizedPhone}%`)
+      .limit(1);
+
+    if (!error && data?.[0]?.id) return data[0].id;
   }
 
-  const { data: result, error: findError } = resultPayload;
-  if (findError) {
-    throw new Error(findError.message);
+  // 2) Busca por nome (case-insensitive, match exato)
+  if (trimmedNome) {
+    const { data, error } = await supabase
+      .from("clientes")
+      .select("id,nome")
+      .ilike("nome", trimmedNome)
+      .limit(1);
+
+    if (!error && data?.[0]?.id) return data[0].id;
   }
 
-  if (result?.[0]?.id) {
-    return result[0].id;
-  }
-
-  const basePayload = {
-    nome: nome || "Cliente importado",
-  };
-  if (telefone) {
-    basePayload.telefone = telefone;
-  }
+  // 3) Criar novo cliente
+  const basePayload = { nome: trimmedNome || "Cliente importado" };
+  if (telefone) basePayload.telefone = telefone;
 
   const insertPayload = { ...basePayload };
-  if (currentUserId) {
-    insertPayload.criado_por = currentUserId;
-  }
+  if (currentUserId) insertPayload.criado_por = currentUserId;
 
   let { data: created, error: insertError } = await supabase
     .from("clientes")
@@ -430,29 +431,20 @@ async function findOrCreateCliente({ nome, telefone }, currentUserId = null) {
     .select("id")
     .single();
 
-  if (
-    insertError &&
-    insertError.message?.includes("Could not find the 'criado_por' column of 'clientes' in the schema cache")
-  ) {
+  if (insertError && insertError.message?.includes("Could not find the 'criado_por' column")) {
     const retryPayload = { ...basePayload };
     const { data: retryCreated, error: retryError } = await supabase
       .from("clientes")
       .insert([retryPayload])
       .select("id")
       .single();
-
-    if (!retryError) {
-      return retryCreated.id;
-    }
-
+    if (!retryError) return retryCreated.id;
     insertError = retryError;
   }
 
   if (insertError) {
     if (insertError.message?.includes("row-level security")) {
-      throw new Error(
-        "Permissão negada ao inserir cliente. Verifique as políticas RLS no Supabase para a tabela clientes."
-      );
+      throw new Error("Permissão negada ao inserir cliente. Verifique as políticas RLS no Supabase.");
     }
     throw new Error(insertError.message);
   }
