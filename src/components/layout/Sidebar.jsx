@@ -15,7 +15,7 @@ export default function Sidebar({ profile }) {
   ];
 
   return (
-    <aside className={`${collapsed ? "w-20" : "w-64"} bg-slate-950 text-white flex flex-col h-screen sticky top-0 shadow-lg transition-all duration-300`}>
+    <aside className={`${collapsed ? "w-20" : "w-64"} shrink-0 bg-slate-950 text-white flex flex-col h-screen sticky top-0 shadow-lg transition-all duration-300`}>
       {/* Logo / Header */}
       <div className={`px-4 py-6 flex items-center gap-3 border-b border-white/10 ${collapsed ? "justify-center" : "justify-between"}`}>
         <div className="h-10 w-10 bg-white/10 rounded-lg flex items-center justify-center flex-shrink-0 hover:bg-white/20 transition">

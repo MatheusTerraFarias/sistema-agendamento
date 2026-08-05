@@ -137,8 +137,8 @@ export default function Agendamentos() {
   const currentUserName = profile?.nome || "Usuário";
 
   return (
-    <div className="page-anim min-h-screen bg-slate-100 py-8">
-      <div className="mx-auto max-w-7xl px-4">
+    <div className="page-anim min-h-full w-full min-w-0 max-w-full bg-slate-100 py-6 sm:py-8">
+      <div className="mx-auto w-full min-w-0 max-w-7xl px-0 sm:px-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Agendamentos</h1>
@@ -185,7 +185,7 @@ export default function Agendamentos() {
           </Card>
         </div>
 
-        <div className="rounded-3xl bg-white p-6 shadow-sm">
+        <div className="w-full min-w-0 rounded-3xl bg-white p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
             <div className="flex flex-wrap items-center gap-2">
               {FILTERS.map((item) => (

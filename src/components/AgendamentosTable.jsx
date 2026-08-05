@@ -81,8 +81,8 @@ export default function AgendamentosTable({
 
   if (loading) {
     return (
-      <div className="overflow-x-auto rounded-3xl border border-slate-200">
-        <table className="min-w-full border-collapse bg-white text-left text-sm text-slate-900">
+      <div className="w-full max-w-full overflow-x-auto rounded-3xl border border-slate-200">
+        <table className="w-full min-w-[900px] border-collapse bg-white text-left text-sm text-slate-900">
           <thead className="bg-slate-100 text-slate-700">
             <tr>
               <th className="px-6 py-4 font-semibold w-12">
@@ -130,8 +130,8 @@ export default function AgendamentosTable({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-3xl border border-slate-200">
-        <table className="min-w-full border-collapse bg-white text-left text-sm text-slate-900">
+      <div className="w-full max-w-full overflow-x-auto rounded-3xl border border-slate-200">
+        <table className="w-full min-w-[900px] border-collapse bg-white text-left text-sm text-slate-900">
           <thead className="bg-slate-100 text-slate-700">
             <tr>
               <th className="px-6 py-4 font-semibold w-12">

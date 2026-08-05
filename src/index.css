@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+/* Prevent child elements from expanding the application beyond the viewport. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-width: 0;
+  min-height: 100%;
+  max-width: 100%;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
 .animated-gradient {
   background: linear-gradient(
     -45deg,
