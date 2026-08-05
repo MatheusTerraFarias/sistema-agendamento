@@ -1,3 +1,4 @@
+import { getAreaFromBairro } from "../lib/bairroAreaMap";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -286,7 +287,8 @@ export function useAgendamentos() {
     const values = {
       cliente_id: payload.cliente_id,
       servico_id: payload.servico_id,
-      area: payload.area || null,
+      area: getAreaFromBairro(payload.bairro) || payload.area || null,
+      bairro: payload.bairro || null,
       data_agendamento: payload.data_agendamento,
       hora_agendamento: payload.hora_agendamento,
       status: "novo",

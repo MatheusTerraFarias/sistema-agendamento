@@ -7,6 +7,7 @@ export default function AgendamentoForm({ initialData = {}, clientes = [], servi
   const [horaAgendamento, setHoraAgendamento] = useState(initialData.hora_agendamento || "");
   const [observacao, setObservacao] = useState(initialData.observacao || "");
   const [status, setStatus] = useState(initialData.status || "novo");
+  const [bairro, setBairro] = useState(initialData.bairro || "");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -18,6 +19,7 @@ export default function AgendamentoForm({ initialData = {}, clientes = [], servi
       hora_agendamento: horaAgendamento || null,
       observacao: observacao.trim() || null,
       status,
+      bairro: bairro.trim() || null,
     });
   };
 
@@ -100,6 +102,17 @@ export default function AgendamentoForm({ initialData = {}, clientes = [], servi
           <div />
         )}
       </div>
+
+      <label className="block">
+        <span className="text-sm font-semibold text-slate-700">Bairro</span>
+        <input
+          type="text"
+          value={bairro}
+          onChange={(event) => setBairro(event.target.value)}
+          placeholder="Bairro do cliente"
+          className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+        />
+      </label>
 
       <label className="block">
         <span className="text-sm font-semibold text-slate-700">Observação</span>

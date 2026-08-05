@@ -1,3 +1,4 @@
+import { getAreaFromBairro } from "../lib/bairroAreaMap";
 import { useRef, useState } from "react";
 import { read, utils } from "xlsx";
 import { supabase } from "../lib/supabase";
@@ -47,7 +48,7 @@ const HEADER_ALIASES = {
   territorio: "area",
   grupo_de_regioes: "area",
   grupo_regioes: "area",
-  bairro: "area",
+  bairro: "bairro",
 };
 
 function normalizeHeader(value) {
@@ -770,7 +771,8 @@ export function useImportacao() {
             const insertPayload = {
               cliente_id: clienteId,
               servico_id: selectedService?.id || defaultService?.id || null,
-              area: String(normalizeCellValue(row.area)) || null,
+              area: getAreaFromBairro(String(normalizeCellValue(row.bairro))) || String(normalizeCellValue(row.area)) || null,
+              bairro: String(normalizeCellValue(row.bairro)) || null,
               data_agendamento: formattedDate,
               hora_agendamento: horaAgendamento || "00:00",
               status: "novo",

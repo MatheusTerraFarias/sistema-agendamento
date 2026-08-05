@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+﻿import { useCallback, useMemo, useState } from "react";
 import { FaEdit, FaExchangeAlt, FaTimesCircle } from "react-icons/fa";
 
 const STATUS_BADGES = {
@@ -194,7 +194,7 @@ export default function AgendamentosTable({
                     {getStatusLabel(item.status)}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-slate-600">{item.area || "—"}</td>
+                <td className="px-6 py-4 text-sm text-slate-600">{item.bairro || "—"}</td>
                 <td className="px-6 py-4 text-sm text-slate-600">{item.atendente_nome || "Sem atendente"}</td>
                 <td className="px-6 py-4">
                   <div className="flex flex-wrap gap-1.5">
