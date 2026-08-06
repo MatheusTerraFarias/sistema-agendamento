@@ -1,0 +1,21 @@
+{
+  "name": "automacao-status",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Automação de sincronização de status de ordens de serviço entre a planilha online e o sistema de agendamento (Supabase).",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/cli.js",
+    "run": "node src/cli.js",
+    "watch": "node src/cli.js --watch",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.106.2",
+    "dotenv": "^16.4.5",
+    "googleapis": "^144.0.0"
+  }
+}

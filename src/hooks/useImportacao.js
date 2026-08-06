@@ -226,17 +226,20 @@ function getSheetRows(sheet, headerRow, range) {
 }
 
 function normalizeStatus(value) {
-  const raw = String(value || "").trim().toLowerCase();
+  const raw = String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
   if (!raw) return "";
-  const statusMap = {
-    "em andamento": "em_andamento",
-    "em_andamento": "em_andamento",
-    andamento: "em_andamento",
-    finalizado: "finalizado",
-    cancelado: "cancelado",
-    novo: "novo",
-  };
-  return statusMap[raw] || raw.replace(/\s+/g, "_");
+  if (raw.includes("nao conclu")) return "em_andamento";
+  if (raw.includes("conclu")) return "finalizado";
+  if (raw.includes("suspens")) return "em_andamento";
+  if (raw.includes("finaliz")) return "finalizado";
+  if (raw.includes("cancel")) return "cancelado";
+  if (raw.includes("andamento") || raw.includes("inici")) return "em_andamento";
+  if (raw.includes("pendent") || raw === "novo") return "novo";
+  return raw.replace(/\s+/g, "_");
 }
 
 function isCurrentInShift(shiftStart, shiftEnd) {
