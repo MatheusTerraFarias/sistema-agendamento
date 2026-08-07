@@ -36,12 +36,15 @@ export function useAgendamentos() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const clientesRef = useRef([]);
+  const filterRef = useRef("todos");
 
   const isSupervisor = useMemo(() => isSupervisorProfile(profile?.perfil), [profile]);
 
   useEffect(() => {
     clientesRef.current = clientes;
   }, [clientes]);
+
+  const setActiveFilter = useCallback((f) => { filterRef.current = f; }, []);
 
   const loadProfile = useCallback(async (userId) => {
     const { data, error: profileError } = await supabase
@@ -113,6 +116,29 @@ export function useAgendamentos() {
     [loadAtendentes]
   );
 
+  const deleteUsuario = useCallback(
+    async (userId) => {
+      setLoading(true);
+      setError(null);
+
+      const { error } = await supabase
+        .from('usuarios')
+        .delete()
+        .eq('id', userId);
+
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return false;
+      }
+
+      await loadAtendentes();
+      setLoading(false);
+      return true;
+    },
+    [loadAtendentes]
+  );
+
   const loadClientes = useCallback(async () => {
     const { data, error } = await supabase
       .from("clientes")
@@ -151,7 +177,7 @@ export function useAgendamentos() {
       let query = supabase.from("agendamentos").select("*").order("created_at", { ascending: false });
 
       if (!isSupervisor && session?.user?.id) {
-        query = query.eq("criado_por", session.user.id);
+        query = query.or("criado_por.eq." + session.user.id + ",distribuido_para.eq." + session.user.id);
       }
 
       if (filter && filter !== "todos") {
@@ -304,7 +330,7 @@ export function useAgendamentos() {
       return null;
     }
 
-    await loadAgendamentos();
+      await loadAgendamentos(filterRef.current);
     setLoading(false);
     return data;
   }
@@ -326,7 +352,7 @@ export function useAgendamentos() {
       return null;
     }
 
-    await loadAgendamentos();
+      await loadAgendamentos(filterRef.current);
     setLoading(false);
     return data;
   }
@@ -345,7 +371,7 @@ export function useAgendamentos() {
     if (error) {
       setError(error.message);
     } else {
-      await loadAgendamentos();
+      await loadAgendamentos(filterRef.current);
     }
 
     setLoading(false);
@@ -391,7 +417,7 @@ export function useAgendamentos() {
       return null;
     }
 
-    await loadAgendamentos();
+      await loadAgendamentos(filterRef.current);
     setLoading(false);
     return true;
   }
@@ -430,7 +456,7 @@ export function useAgendamentos() {
       return null;
     }
 
-    await loadAgendamentos();
+      await loadAgendamentos(filterRef.current);
     setLoading(false);
     return true;
   }
@@ -456,5 +482,6 @@ export function useAgendamentos() {
     reatribuirAgendamentos,
     createUsuario,
     deleteUsuario,
+    setActiveFilter,
   };
 }

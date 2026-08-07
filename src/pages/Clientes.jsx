@@ -1,12 +1,12 @@
 ﻿import { useEffect, useMemo } from "react";
-import { useAgendamentos } from "../hooks/useAgendamentos";
+import { useAgendamentosContext } from "../hooks/useAgendamentosContext";
 import { StatCard } from "../components/ui/Card";
 import Card from "../components/ui/Card";
 import Header from "../components/layout/Header";
 import { FaUsers, FaPhone, FaPhoneSlash, FaCalendarAlt } from "react-icons/fa";
 
 export default function Clientes() {
-  const { session, profile, clientes, agendamentos, loading, error, loadAll } = useAgendamentos();
+  const { session, profile, clientes, agendamentos, loading, error, loadAll } = useAgendamentosContext();
 
   useEffect(() => {
     if (!session) return;

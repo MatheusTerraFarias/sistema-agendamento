@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+﻿import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://jjsgpttjqtdysdetouqv.supabase.co'
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY ||
@@ -14,9 +14,14 @@ const debugFetch = async (url, options) => {
     console.debug(`%c[Supabase][${requestId}] body:`, 'color: #38bdf8;', options.body)
   }
 
-  const response = await fetch(url, options)
-  console.debug(`%c[Supabase][${requestId}] response:`, 'color: #fbbf24;', response.status, response.statusText, url)
-  return response
+  try {
+    const response = await fetch(url, options)
+    console.debug(`%c[Supabase][${requestId}] response:`, 'color: #fbbf24;', response.status, response.statusText, url)
+    return response
+  } catch (err) {
+    console.error(`%c[Supabase][${requestId}] fetch error:`, 'color: #ef4444;', err.message, url)
+    throw err
+  }
 }
 
 export const supabase = createClient(
@@ -24,5 +29,10 @@ export const supabase = createClient(
   supabaseKey,
   {
     fetch: debugFetch,
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
   }
 )

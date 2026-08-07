@@ -1,10 +1,12 @@
 ﻿import { useEffect, useState } from "react";
 import { FaRandom, FaSave, FaTrash, FaCheckCircle, FaChevronDown, FaChevronUp, FaRegListAlt } from "react-icons/fa";
+import { useAgendamentosContext } from "../hooks/useAgendamentosContext";
 import { useDistribuicao } from "../hooks/useDistribuicao";
 import DistributionPreview from "../components/DistributionPreview";
 import Header from "../components/layout/Header";
 
 export default function Distribuicao() {
+  const { profile } = useAgendamentosContext();
   const { atendentes, regras, loading, error, preview, executing, areas, tipos, loadAgendamentos, loadAtendentes, loadRegras, salvarRegra, deletarRegra, filtrarAgendamentos, calcularPreview, executarDistribuicao, setPreview } = useDistribuicao();
 
   const [filtroAreas, setFiltroAreas] = useState([]);
@@ -48,7 +50,7 @@ export default function Distribuicao() {
 
   return (
     <>
-      <Header title="Distribuição" subtitle="Configure e distribua atividades entre atendentes" />
+      <Header title="Distribuição" subtitle="Configure e distribua atividades entre atendentes" profile={profile} />
       <div className="page-anim flex-1 overflow-y-auto">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-5">
           {/* Resultado */}

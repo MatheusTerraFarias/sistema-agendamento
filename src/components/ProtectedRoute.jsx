@@ -5,26 +5,44 @@ import { supabase } from "../lib/supabase";
 export default function ProtectedRoute({ children }) {
   const [checking, setChecking] = useState(true);
   const [session, setSession] = useState(null);
+  const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
     let mounted = true;
 
     async function verifySession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!mounted) return;
-      setSession(session);
-      setChecking(false);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (!mounted) return;
+        if (error) {
+          console.error("Session check error:", error);
+          setAuthError(error.message);
+        }
+        setSession(session || null);
+      } catch (err) {
+        console.error("Session check failed:", err);
+        if (!mounted) return;
+        setAuthError(err.message || "Erro ao verificar sessão");
+        setSession(null);
+      } finally {
+        if (mounted) setChecking(false);
+      }
     }
 
     verifySession();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
-      if (!mounted) return;
-      setSession(session || null);
-      setChecking(false);
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (!mounted) return;
+        setSession(session || null);
+        setChecking(false);
+      }
+    );
 
-    return () => { mounted = false; listener?.subscription?.unsubscribe(); };
+    return () => {
+      mounted = false;
+      listener?.subscription?.unsubscribe();
+    };
   }, []);
 
   if (checking) {

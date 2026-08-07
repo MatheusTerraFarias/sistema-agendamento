@@ -1,7 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { FaSearch } from "react-icons/fa";
-import { useAgendamentos } from "../hooks/useAgendamentos";
+import { useAgendamentosContext } from "../hooks/useAgendamentosContext";
 import AgendamentoForm from "../components/AgendamentoForm";
 import AgendamentosTable from "../components/AgendamentosTable";
 import ReatribuirModal from "../components/ReatribuirModal";
@@ -20,8 +20,8 @@ export default function Agendamentos() {
   const {
     session, profile, agendamentos, atendentes, clientes, servicos,
     loading, error, isSupervisor, loadAll, createAgendamento, updateAgendamento,
-    cancelAgendamento, cancelAgendamentos, reatribuirAgendamento, reatribuirAgendamentos,
-  } = useAgendamentos();
+    cancelAgendamento, cancelAgendamentos, reatribuirAgendamento, reatribuirAgendamentos, setActiveFilter,
+  } = useAgendamentosContext();
 
   const [filter, setFilter] = useState("todos");
   const [search, setSearch] = useState("");
@@ -96,7 +96,7 @@ export default function Agendamentos() {
           {/* Stats cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {FILTERS.slice(1).map((f) => (
-              <button key={f.key} onClick={() => setFilter(f.key)} className={`rounded-xl px-4 py-3 text-left transition-all duration-200 border ${filter === f.key ? "bg-slate-900 text-white border-slate-900 shadow-md" : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`}>
+              <button key={f.key} onClick={() => { setFilter(f.key); setActiveFilter(f.key); }} className={`rounded-xl px-4 py-3 text-left transition-all duration-200 border ${filter === f.key ? "bg-slate-900 text-white border-slate-900 shadow-md" : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`}>
                 <p className={`text-2xs font-semibold uppercase tracking-wider ${filter === f.key ? "text-white/60" : "text-slate-400"}`}>{f.label}</p>
                 <p className={`text-2xl font-bold mt-1 tabular-nums ${filter === f.key ? "text-white" : "text-slate-900"}`}>{loading ? "—" : counts[f.key] ?? 0}</p>
               </button>
@@ -107,7 +107,7 @@ export default function Agendamentos() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <div className="flex flex-wrap gap-1.5">
               {FILTERS.map((f) => (
-                <button key={f.key} onClick={() => setFilter(f.key)} className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition-all duration-200 ${filter === f.key ? "bg-slate-900 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                <button key={f.key} onClick={() => { setFilter(f.key); setActiveFilter(f.key); }} className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition-all duration-200 ${filter === f.key ? "bg-slate-900 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
                   {f.label}
                 </button>
               ))}

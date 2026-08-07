@@ -1,9 +1,9 @@
 ﻿import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
-import { useAgendamentos } from "../../hooks/useAgendamentos";
+import { useAgendamentosContext } from "../../hooks/useAgendamentosContext";
 
 export default function AppLayout() {
-  const { profile } = useAgendamentos();
+  const { profile } = useAgendamentosContext();
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50/50">

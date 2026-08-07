@@ -15,18 +15,21 @@ import { supabase } from "../../lib/supabase";
 import { useNavigate } from "react-router-dom";
 
 const navItems = [
-  { to: "/dashboard", label: "Dashboard", icon: FaHome },
-  { to: "/agendamentos", label: "Agendamentos", icon: FaCalendarAlt },
-  { to: "/clientes", label: "Clientes", icon: FaUsers },
-  { to: "/importar", label: "Importação", icon: FaFileImport },
-  { to: "/distribuicao", label: "Distribuição", icon: FaRandom },
-  { to: "/configuracoes", label: "Configurações", icon: FaCog },
+  { to: "/dashboard", label: "Dashboard", icon: FaHome, roles: ["admin", "supervisor", "supervisora", "atendente"] },
+  { to: "/agendamentos", label: "Agendamentos", icon: FaCalendarAlt, roles: ["admin", "supervisor", "supervisora", "atendente"] },
+  { to: "/clientes", label: "Clientes", icon: FaUsers, roles: ["admin", "supervisor", "supervisora", "atendente"] },
+  { to: "/importar", label: "Importação", icon: FaFileImport, roles: ["admin", "supervisor", "supervisora"] },
+  { to: "/distribuicao", label: "Distribuição", icon: FaRandom, roles: ["admin", "supervisor", "supervisora"] },
+  { to: "/configuracoes", label: "Configurações", icon: FaCog, roles: ["admin", "supervisor", "supervisora"] },
 ];
 
 export default function Sidebar({ profile }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+
+  const userRole = (profile?.perfil || "atendente").toLowerCase();
+  const visibleItems = navItems.filter((item) => item.roles.includes(userRole));
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -68,7 +71,7 @@ export default function Sidebar({ profile }) {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto" role="navigation" aria-label="Menu principal">
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = item.icon;
           const active = location.pathname === item.to;
           return (

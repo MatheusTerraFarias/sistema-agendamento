@@ -19,6 +19,7 @@ function SkeletonRow() {
   return (
     <tr className="border-t border-slate-100">
       <td className="px-5 py-4"><div className="skeleton h-4 w-4 rounded" /></td>
+      <td className="px-5 py-4"><div className="skeleton h-4 w-20 rounded" /></td>
       <td className="px-5 py-4"><div className="skeleton h-4 w-32 rounded" /></td>
       <td className="px-5 py-4"><div className="skeleton h-4 w-24 rounded" /></td>
       <td className="px-5 py-4"><div className="skeleton h-4 w-20 rounded" /></td>
@@ -62,7 +63,7 @@ export default function AgendamentosTable({ agendamentos, loading, onEdit, onCan
         <table className="w-full min-w-[1020px] border-collapse text-sm">
           <thead className="bg-slate-50/80 border-b border-slate-200">
             <tr>
-              {["", "Cliente", "Telefone", "Data", "Hora", "Status", "Bairro", "Atendente", "Ações"].map((h) => (
+              {["", "OS", "Cliente", "Telefone", "Data", "Hora", "Status", "Bairro", "Atendente", "Ações"].map((h) => (
                 <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
               ))}
             </tr>
@@ -123,7 +124,7 @@ export default function AgendamentosTable({ agendamentos, loading, onEdit, onCan
                     aria-label="Selecionar todos"
                   />
                 </th>
-                {["Cliente", "Telefone", "Data", "Hora", "Status", "Bairro", "Atendente", "Ações"].map((h) => (
+                {["OS", "Cliente", "Telefone", "Data", "Hora", "Status", "Bairro", "Atendente", "Ações"].map((h) => (
                   <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
@@ -145,6 +146,7 @@ export default function AgendamentosTable({ agendamentos, loading, onEdit, onCan
                       aria-label={`Selecionar ${item.cliente_nome}`}
                     />
                   </td>
+                  <td className="px-5 py-3.5 text-slate-700 font-mono text-xs font-semibold max-w-[120px] truncate">{item.protocolo || "—"}</td>
                   <td className="px-5 py-3.5 font-semibold text-slate-800 max-w-[200px] truncate">{item.cliente_nome || "—"}</td>
                   <td className="px-5 py-3.5 text-slate-500 max-w-[160px] truncate">{item.telefone || "—"}</td>
                   <td className="px-5 py-3.5 text-slate-600 tabular-nums">

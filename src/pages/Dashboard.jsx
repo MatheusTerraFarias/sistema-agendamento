@@ -1,7 +1,7 @@
 ﻿import { useEffect, useMemo } from "react";
 import { FaUsers, FaCalendarAlt, FaCheckCircle, FaClock, FaPlus, FaArrowRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { useAgendamentos } from "../hooks/useAgendamentos";
+import { useAgendamentosContext } from "../hooks/useAgendamentosContext";
 import { StatCard } from "../components/ui/Card";
 import Card from "../components/ui/Card";
 import Header from "../components/layout/Header";
@@ -22,7 +22,7 @@ const BADGE_CLASS = {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { session, agendamentos, clientes, loading, loadAll } = useAgendamentos();
+  const { session, profile, agendamentos, clientes, loading, loadAll } = useAgendamentosContext();
 
   useEffect(() => {
     if (!session) return;
@@ -53,7 +53,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <Header title="Dashboard" subtitle="Bem-vindo ao Sistema de Agendamento" session={session} profile={null} />
+      <Header title="Dashboard" subtitle="Bem-vindo ao Sistema de Agendamento" session={session} profile={profile} />
       <div className="page-anim flex-1 overflow-y-auto">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
           {/* Stats */}

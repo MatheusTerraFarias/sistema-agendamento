@@ -1,7 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { Navigate, useNavigate } from "react-router-dom";
-import logo from "../assets/logo.png";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -18,10 +17,15 @@ export default function Login() {
   useEffect(() => {
     let mounted = true;
     async function verifySession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!mounted) return;
-      setHasSession(Boolean(session));
-      setSessionChecked(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
+        setHasSession(Boolean(session));
+      } catch (err) {
+        console.error("Login session check error:", err);
+      } finally {
+        if (mounted) setSessionChecked(true);
+      }
     }
     verifySession();
     return () => { mounted = false; };
@@ -53,26 +57,30 @@ export default function Login() {
     if (!email) { setResetMessage("Informe seu e-mail para resetar a senha."); return; }
     setResetLoading(true);
     setResetMessage("");
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset` });
-    setResetLoading(false);
-    setResetMessage(error ? error.message : "E-mail de recuperação enviado com sucesso.");
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/reset` });
+      setResetMessage(error ? error.message : "E-mail de recuperação enviado com sucesso.");
+    } catch (err) {
+      setResetMessage(err?.message || "Erro ao enviar e-mail de recuperação.");
+    } finally {
+      setResetLoading(false);
+    }
   }
 
   return (
     <div className="page-anim min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-primary-50/30 px-4">
       <div className="w-full max-w-md">
-        {/* Card */}
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 sm:p-10">
-          {/* Header */}
           <div className="flex flex-col items-center mb-8">
             <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center mb-5 shadow-lg shadow-primary/20">
-              <img src={logo} alt="" className="h-10 w-auto brightness-0 invert" />
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white">
+                <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Bem-vindo de volta</h1>
             <p className="text-sm text-slate-400 mt-1.5">Entre com suas credenciais para continuar</p>
           </div>
 
-          {/* Form */}
           <form onSubmit={fazerLogin} className="space-y-4">
             <div>
               <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-700">E-mail</label>
@@ -135,7 +143,6 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Forgot password */}
           <div className="mt-6 text-center">
             <button
               type="button"
@@ -151,7 +158,6 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Footer */}
         <p className="mt-6 text-center text-xs text-slate-400">
           Sistema de Agendamento &copy; {new Date().getFullYear()}
         </p>

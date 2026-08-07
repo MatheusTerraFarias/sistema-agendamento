@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useState } from "react";
-import { useAgendamentos } from "../hooks/useAgendamentos";
+import { useAgendamentosContext } from "../hooks/useAgendamentosContext";
 import { StatCard } from "../components/ui/Card";
 import Card from "../components/ui/Card";
 import Header from "../components/layout/Header";
@@ -23,7 +23,7 @@ export default function Configuracoes() {
   const [message, setMessage] = useState("");
   const [creating, setCreating] = useState(false);
 
-  const { session, profile, atendentes, clientes, servicos, agendamentos, loading, error, isSupervisor, loadAll, createUsuario, deleteUsuario } = useAgendamentos();
+  const { session, profile, atendentes, clientes, servicos, agendamentos, loading, error, isSupervisor, loadAll, createUsuario, deleteUsuario } = useAgendamentosContext();
 
   useEffect(() => {
     if (!session || !profile) return;
@@ -47,9 +47,9 @@ export default function Configuracoes() {
   }), [clientes.length, servicos.length, atendentes.length, agendamentos.length]);
 
   const handleDeleteUsuario = async (userId, nome) => {
-    if (!window.confirm(Excluir o perfil de ${nome}? Essa ação não pode ser desfeita.)) return;
+    if (!window.confirm("Excluir o perfil de " + nome + "? Essa ação não pode ser desfeita.")) return;
     const ok = await deleteUsuario(userId);
-    if (ok) setFeedback({ type: "success", message: Perfil de ${nome} excluído. });
+    if (ok) setFeedback({ type: "success", message: "Perfil de " + nome + " excluído." });
   };
 
   const [feedback, setFeedback] = useState(null);
@@ -132,7 +132,7 @@ export default function Configuracoes() {
                       <button
                         onClick={() => handleDeleteUsuario(u.id, u.nome)}
                         className="p-1.5 rounded-lg text-slate-300 hover:text-danger hover:bg-danger-50 transition-all duration-150 opacity-0 group-hover:opacity-100 shrink-0"
-                        title={Excluir }
+                        title="Excluir"
                       >
                         <FaTrash size={12} />
                       </button>
