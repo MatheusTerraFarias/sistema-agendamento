@@ -1,94 +1,46 @@
-import ImportPreview from "../components/ImportPreview";
+﻿import ImportPreview from "../components/ImportPreview";
 import ImportResultModal from "../components/ImportResultModal";
 import ImportUpload from "../components/ImportUpload";
 import { useImportacao } from "../hooks/useImportacao";
+import Header from "../components/layout/Header";
 
 export default function Importar() {
-  const {
-    fileName,
-    uploadDate,
-    rowCount,
-    previewRows,
-    validationError,
-    loading,
-    processing,
-    progress,
-    report,
-    showReport,
-    error,
-    handleFileChange,
-    processImport,
-    cancelImport,
-    resetState,
-  } = useImportacao();
+  const { fileName, uploadDate, rowCount, previewRows, validationError, loading, processing, progress, report, showReport, error, handleFileChange, processImport, cancelImport, resetState } = useImportacao();
 
   return (
-    <div className="page-anim min-h-full w-full min-w-0 max-w-full bg-gradient-to-br from-slate-50 to-slate-100 py-6 sm:py-8">
-      <div className="mx-auto w-full min-w-0 max-w-7xl px-0 sm:px-4">
-        <div className="mb-8 rounded-3xl bg-white p-8 shadow-sm">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">Importar XLSX</h1>
-              <p className="mt-2 text-slate-600">
-                Faça upload de sua base diária de chamados e processe os protocolos sem duplicidade com segurança e confiabilidade.
-              </p>
+    <>
+      <Header title="Importar XLSX" subtitle="Faça upload de sua base diária de chamados" />
+      <div className="page-anim flex-1 overflow-y-auto">
+        <div className="mx-auto w-full min-w-0 max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+            <div className="min-w-0 space-y-6">
+              <ImportUpload fileName={fileName} uploadDate={uploadDate} rowCount={rowCount} validationError={validationError} loading={loading} processing={processing} progress={progress} onFileChange={handleFileChange} onProcess={processImport} onCancel={cancelImport} />
+              {previewRows.length > 0 && <ImportPreview rows={previewRows} />}
+              {error && <div className="rounded-2xl bg-danger-50 border border-danger-200 p-5 text-sm text-danger-700"><strong>Erro:</strong> {error}</div>}
+            </div>
+
+            <div className="h-fit min-w-0 rounded-2xl bg-white border border-slate-200 shadow-card p-6">
+              <h2 className="text-lg font-bold text-slate-900">Como funciona</h2>
+              <ul className="mt-5 space-y-4 text-sm text-slate-600 leading-relaxed">
+                {[
+                  "Faça upload de um arquivo .xlsx ou .xls com seus chamados.",
+                  "O sistema valida colunas obrigatórias e mapeia nomes alternativos automaticamente.",
+                  "Registros novos são criados, existentes atualizados, finalizados/cancelados ignorados.",
+                  "Novos agendamentos são distribuídos automaticamente entre atendentes disponíveis.",
+                  "Você recebe um relatório detalhado com sucesso, erros e ações realizadas.",
+                ].map((text, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary text-xs font-bold">{i + 1}</span>
+                    <span className="pt-0.5">{text}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
+
+          {showReport && <ImportResultModal report={report} onClose={resetState} />}
         </div>
-
-        <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-          <div className="min-w-0 space-y-6">
-            <ImportUpload
-              fileName={fileName}
-              uploadDate={uploadDate}
-              rowCount={rowCount}
-              validationError={validationError}
-              loading={loading}
-              processing={processing}
-              progress={progress}
-              onFileChange={handleFileChange}
-              onProcess={processImport}
-              onCancel={cancelImport}
-            />
-
-            {previewRows.length ? <ImportPreview rows={previewRows} /> : null}
-
-            {error ? (
-              <div className="rounded-3xl bg-rose-50 border border-rose-200 p-6 text-sm text-rose-700">
-                <strong>Erro:</strong> {error}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="h-fit min-w-0 rounded-3xl bg-white p-8 shadow-sm">
-            <h2 className="text-2xl font-bold text-slate-900">Como funciona</h2>
-            <ul className="mt-6 space-y-4 text-slate-700 text-sm leading-relaxed">
-              <li className="flex gap-3">
-                <span className="font-bold text-primary min-w-6">1.</span>
-                <span>Faça upload de um arquivo .xlsx ou .xls com seus chamados.</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="font-bold text-primary min-w-6">2.</span>
-                <span>O sistema valida colunas obrigatórias e mapeia nomes alternativos automaticamente.</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="font-bold text-primary min-w-6">3.</span>
-                <span>Registros novos são criados, existentes atualizados, finalizados/cancelados ignorados.</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="font-bold text-primary min-w-6">4.</span>
-                <span>Novos agendamentos são distribuídos automaticamente entre atendentes disponíveis.</span>
-              </li>
-              <li className="flex gap-3">
-                <span className="font-bold text-primary min-w-6">5.</span>
-                <span>Você recebe um relatório detalhado com sucesso, erros e ações realizadas.</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        {showReport ? <ImportResultModal report={report} onClose={resetState} /> : null}
       </div>
-    </div>
+    </>
   );
 }

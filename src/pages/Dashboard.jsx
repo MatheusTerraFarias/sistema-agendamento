@@ -1,8 +1,24 @@
-import { useEffect, useMemo } from "react";
-import { FaUsers, FaCalendarAlt, FaCheckCircle, FaClock, FaPlus } from "react-icons/fa";
+﻿import { useEffect, useMemo } from "react";
+import { FaUsers, FaCalendarAlt, FaCheckCircle, FaClock, FaPlus, FaArrowRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useAgendamentos } from "../hooks/useAgendamentos";
+import { StatCard } from "../components/ui/Card";
 import Card from "../components/ui/Card";
+import Header from "../components/layout/Header";
+
+const STATUS_CONFIG = {
+  novo: { label: "Novo", color: "text-primary", bg: "bg-primary-50", bar: "bg-primary-400" },
+  em_andamento: { label: "Em Andamento", color: "text-warning-600", bg: "bg-warning-50", bar: "bg-warning-400" },
+  finalizado: { label: "Finalizado", color: "text-success-600", bg: "bg-success-50", bar: "bg-success-500" },
+  cancelado: { label: "Cancelado", color: "text-danger", bg: "bg-danger-50", bar: "bg-danger-400" },
+};
+
+const BADGE_CLASS = {
+  novo: "bg-primary-50 text-primary-700 ring-1 ring-primary-200",
+  em_andamento: "bg-warning-50 text-warning-700 ring-1 ring-warning-200",
+  finalizado: "bg-success-50 text-success-700 ring-1 ring-success-200",
+  cancelado: "bg-danger-50 text-danger-700 ring-1 ring-danger-200",
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -13,198 +29,111 @@ export default function Dashboard() {
     loadAll();
   }, [session, loadAll]);
 
-  const stats = useMemo(
-    () => ({
-      total: agendamentos.length,
-      novo: agendamentos.filter((a) => a.status === "novo").length,
-      em_andamento: agendamentos.filter((a) => a.status === "em_andamento").length,
-      finalizado: agendamentos.filter((a) => a.status === "finalizado").length,
-    }),
-    [agendamentos]
-  );
-
-  const statusDistribution = useMemo(() => {
-    return {
-      novo: agendamentos.filter((a) => a.status === "novo").length,
-      em_andamento: agendamentos.filter((a) => a.status === "em_andamento").length,
-      finalizado: agendamentos.filter((a) => a.status === "finalizado").length,
-      cancelado: agendamentos.filter((a) => a.status === "cancelado").length,
-    };
-  }, [agendamentos]);
+  const stats = useMemo(() => ({
+    total: agendamentos.length,
+    novo: agendamentos.filter((a) => a.status === "novo").length,
+    em_andamento: agendamentos.filter((a) => a.status === "em_andamento").length,
+    finalizado: agendamentos.filter((a) => a.status === "finalizado").length,
+  }), [agendamentos]);
 
   const recentAgendamentos = useMemo(
-    () => agendamentos.slice(0, 5).map((a) => ({
-      ...a,
-      cliente_nome: clientes.find((c) => c.id === a.cliente_id)?.nome || "Desconhecido",
-    })),
+    () =>
+      agendamentos.slice(0, 6).map((a) => ({
+        ...a,
+        cliente_nome: clientes.find((c) => c.id === a.cliente_id)?.nome || "Desconhecido",
+      })),
     [agendamentos, clientes]
   );
 
   const quickActions = [
-    { label: "Novo Agendamento", icon: FaPlus, action: () => navigate("/agendamentos") },
-    { label: "Ver Clientes", icon: FaUsers, action: () => navigate("/clientes") },
-    { label: "Importar XLSX", icon: FaCalendarAlt, action: () => navigate("/importar") },
+    { label: "Novo Agendamento", icon: FaPlus, to: "/agendamentos", color: "from-primary to-primary-600" },
+    { label: "Ver Clientes", icon: FaUsers, to: "/clientes", color: "from-slate-700 to-slate-900" },
+    { label: "Importar XLSX", icon: FaCalendarAlt, to: "/importar", color: "from-success-500 to-success-700" },
   ];
 
   return (
-    <div className="page-anim space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold text-slate-900">Dashboard</h1>
-        <p className="mt-2 text-slate-600">Bem-vindo ao Sistema de Agendamento. Aqui está um resumo da sua operação.</p>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-widest text-slate-500 font-semibold">Total Agendamentos</p>
-              <p className="mt-3 text-3xl font-bold text-slate-900">{loading ? "-" : stats.total}</p>
-            </div>
-            <div className="h-12 w-12 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600">
-              <FaCalendarAlt size={20} />
-            </div>
+    <>
+      <Header title="Dashboard" subtitle="Bem-vindo ao Sistema de Agendamento" session={session} profile={null} />
+      <div className="page-anim flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+          {/* Stats */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard label="Total" value={loading ? "—" : stats.total} icon={<FaCalendarAlt size={18} />} iconColor="text-primary" trend="Todos os chamados" />
+            <StatCard label="Novos" value={loading ? "—" : stats.novo} icon={<FaClock size={18} />} iconColor="text-primary-500" trend="Aguardando atendimento" />
+            <StatCard label="Em Andamento" value={loading ? "—" : stats.em_andamento} icon={<FaClock size={18} />} iconColor="text-warning-600" trend="Sendo atendidos" />
+            <StatCard label="Finalizados" value={loading ? "—" : stats.finalizado} icon={<FaCheckCircle size={18} />} iconColor="text-success-600" trend="Concluídos" />
           </div>
-          <p className="mt-4 text-xs text-slate-600">Todos os chamados registrados</p>
-        </Card>
 
-        <Card>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-widest text-slate-500 font-semibold">Novos</p>
-              <p className="mt-3 text-3xl font-bold text-sky-600">{loading ? "-" : stats.novo}</p>
-            </div>
-            <div className="h-12 w-12 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600">
-              <FaClock size={20} />
-            </div>
-          </div>
-          <p className="mt-4 text-xs text-slate-600">Aguardando atendimento</p>
-        </Card>
-
-        <Card>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-widest text-slate-500 font-semibold">Em Andamento</p>
-              <p className="mt-3 text-3xl font-bold text-amber-600">{loading ? "-" : stats.em_andamento}</p>
-            </div>
-            <div className="h-12 w-12 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600">
-              <FaClock size={20} />
-            </div>
-          </div>
-          <p className="mt-4 text-xs text-slate-600">Sendo atendidos agora</p>
-        </Card>
-
-        <Card>
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-widest text-slate-500 font-semibold">Finalizados</p>
-              <p className="mt-3 text-3xl font-bold text-emerald-600">{loading ? "-" : stats.finalizado}</p>
-            </div>
-            <div className="h-12 w-12 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
-              <FaCheckCircle size={20} />
-            </div>
-          </div>
-          <p className="mt-4 text-xs text-slate-600">Concluídos com sucesso</p>
-        </Card>
-      </div>
-
-      {/* Status Distribution & Recent */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Status Breakdown */}
-        <Card className="p-6">
-          <h2 className="text-xl font-bold text-slate-900">Distribuição por Status</h2>
-          <div className="mt-6 space-y-4">
-            {[
-              { status: "novo", label: "Novo", color: "text-sky-600", bgColor: "bg-sky-50", count: statusDistribution.novo },
-              { status: "em_andamento", label: "Em Andamento", color: "text-amber-600", bgColor: "bg-amber-50", count: statusDistribution.em_andamento },
-              { status: "finalizado", label: "Finalizado", color: "text-emerald-600", bgColor: "bg-emerald-50", count: statusDistribution.finalizado },
-              { status: "cancelado", label: "Cancelado", color: "text-rose-600", bgColor: "bg-rose-50", count: statusDistribution.cancelado },
-            ].map((item) => (
-              <div key={item.status}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-slate-700">{item.label}</span>
-                  <span className={`text-lg font-bold ${item.color}`}>{item.count}</span>
-                </div>
-                <div className="h-2 rounded-full bg-slate-200 overflow-hidden">
-                  <div
-                    className={`h-full transition-all ${item.bgColor}`}
-                    style={{ width: `${stats.total > 0 ? (item.count / stats.total) * 100 : 0}%` }}
-                  />
-                </div>
+          {/* Main grid */}
+          <div className="grid gap-6 lg:grid-cols-5">
+            <Card className="lg:col-span-2">
+              <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-5">Distribuição por Status</h2>
+              <div className="space-y-4">
+                {Object.entries(STATUS_CONFIG).map(([key, cfg]) => {
+                  const count = agendamentos.filter((a) => a.status === key).length;
+                  const pct = stats.total > 0 ? (count / stats.total) * 100 : 0;
+                  return (
+                    <div key={key}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-sm font-medium text-slate-600">{cfg.label}</span>
+                        <span className={`text-sm font-bold tabular-nums ${cfg.color}`}>{count}</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div className={`h-full rounded-full ${cfg.bar} transition-all duration-500`} style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        </Card>
+            </Card>
 
-        {/* Recent Agendamentos */}
-        <Card className="p-6">
-          <h2 className="text-xl font-bold text-slate-900">Agendamentos Recentes</h2>
-          <div className="mt-6 space-y-3">
-            {loading ? (
-              <p className="text-slate-500 text-sm">Carregando...</p>
-            ) : recentAgendamentos.length > 0 ? (
-              recentAgendamentos.map((agendamento) => (
-                <div key={agendamento.id} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 hover:bg-slate-100 transition cursor-pointer" onClick={() => navigate("/agendamentos")}>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 truncate">{agendamento.cliente_nome}</p>
-                    <p className="text-xs text-slate-500">
-                      {new Date(agendamento.created_at).toLocaleDateString("pt-BR")}
-                    </p>
-                  </div>
-                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                    agendamento.status === "novo"
-                      ? "bg-sky-100 text-sky-800"
-                      : agendamento.status === "em_andamento"
-                      ? "bg-amber-100 text-amber-800"
-                      : agendamento.status === "finalizado"
-                      ? "bg-emerald-100 text-emerald-800"
-                      : "bg-rose-100 text-rose-800"
-                  }`}>
-                    {agendamento.status === "novo"
-                      ? "Novo"
-                      : agendamento.status === "em_andamento"
-                      ? "Em andamento"
-                      : agendamento.status === "finalizado"
-                      ? "Finalizado"
-                      : "Cancelado"}
-                  </span>
+            <Card className="lg:col-span-3">
+              <div className="flex items-center justify-between mb-5">
+                <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Agendamentos Recentes</h2>
+                <button onClick={() => navigate("/agendamentos")} className="text-xs font-semibold text-primary hover:text-primary-600 transition-colors flex items-center gap-1">
+                  Ver todos <FaArrowRight size={10} />
+                </button>
+              </div>
+              {loading ? (
+                <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="skeleton h-14 rounded-xl" />)}</div>
+              ) : recentAgendamentos.length > 0 ? (
+                <div className="space-y-2">
+                  {recentAgendamentos.map((ag) => (
+                    <div key={ag.id} onClick={() => navigate("/agendamentos")} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50 transition-all duration-200 cursor-pointer group">
+                      <div className="h-9 w-9 rounded-xl bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 group-hover:bg-primary-50 group-hover:text-primary transition-colors shrink-0">
+                        {ag.cliente_nome?.charAt(0) || "?"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 truncate">{ag.cliente_nome}</p>
+                        <p className="text-2xs text-slate-400">{new Date(ag.created_at).toLocaleDateString("pt-BR")} &middot; {ag.hora_agendamento || "—"}</p>
+                      </div>
+                      <span className={`inline-flex shrink-0 rounded-lg px-2.5 py-1 text-2xs font-bold ${BADGE_CLASS[ag.status] || "bg-slate-100 text-slate-600"}`}>
+                        {STATUS_CONFIG[ag.status]?.label || ag.status}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))
-            ) : (
-              <p className="text-slate-500 text-sm">Nenhum agendamento encontrado</p>
-            )}
+              ) : (
+                <p className="text-sm text-slate-400 text-center py-8">Nenhum agendamento encontrado</p>
+              )}
+            </Card>
           </div>
-        </Card>
-      </div>
 
-      {/* Quick Actions */}
-      <Card className="p-6">
-        <h2 className="text-xl font-bold text-slate-900 mb-4">Ações Rápidas</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={action.label}
-                onClick={action.action}
-                className="flex items-center justify-center gap-2 rounded-lg border-2 border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-primary hover:bg-primary/5 active:scale-95"
-              >
-                <Icon size={16} />
-                {action.label}
-              </button>
-            );
-          })}
+          {/* Quick Actions */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <button key={action.label} onClick={() => navigate(action.to)} className={`group flex items-center gap-3 rounded-2xl bg-gradient-to-r ${action.color} px-5 py-4 text-sm font-semibold text-white transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98]`}>
+                  <Icon size={16} className="opacity-80" />
+                  {action.label}
+                  <FaArrowRight size={12} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </Card>
-
-      {/* Info Section */}
-      <Card className="p-6 bg-gradient-to-r from-primary/10 to-primary-600/10 border border-primary/20">
-        <h2 className="text-lg font-bold text-primary">📊 Dica</h2>
-        <p className="mt-2 text-sm text-primary-900">
-          Mantenha seus agendamentos organizados e em dia. Use a importação XLSX para atualizar múltiplos registros de uma vez.
-        </p>
-      </Card>
-    </div>
+      </div>
+    </>
   );
 }

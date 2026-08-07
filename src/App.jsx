@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+﻿import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -8,55 +8,27 @@ import Configuracoes from "./pages/Configuracoes";
 import Distribuicao from "./pages/Distribuicao";
 import Importar from "./pages/Importar";
 import ProtectedRoute from "./components/ProtectedRoute";
-import BackToDashboard from "./components/BackToDashboard";
+import AppLayout from "./components/layout/AppLayout";
 
 function App() {
   return (
     <BrowserRouter>
-      <BackToDashboard />
       <Routes>
         <Route path="/" element={<Login />} />
         <Route
-          path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <AppLayout />
             </ProtectedRoute>
           }
-        />
-        <Route
-          path="/agendamentos"
-          element={
-            <ProtectedRoute>
-              <Agendamentos />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/clientes"
-          element={
-            <ProtectedRoute>
-              <Clientes />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/importar"
-          element={
-            <ProtectedRoute>
-              <Importar />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/distribuicao" element={<ProtectedRoute><Distribuicao /></ProtectedRoute>} />
-        <Route
-          path="/configuracoes"
-          element={
-            <ProtectedRoute>
-              <Configuracoes />
-            </ProtectedRoute>
-          }
-        />
+        >
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/agendamentos" element={<Agendamentos />} />
+          <Route path="/clientes" element={<Clientes />} />
+          <Route path="/importar" element={<Importar />} />
+          <Route path="/distribuicao" element={<Distribuicao />} />
+          <Route path="/configuracoes" element={<Configuracoes />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

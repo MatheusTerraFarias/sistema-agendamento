@@ -1,89 +1,81 @@
-import { useState } from "react";
-import { FaSearch, FaBell, FaSignOutAlt } from "react-icons/fa";
-import { supabase } from "../../lib/supabase";
-import { useNavigate } from "react-router-dom";
+﻿import { useState, useRef, useEffect } from "react";
+import { FaSearch, FaBell } from "react-icons/fa";
 
-export default function Header({ title = "Dashboard", session, profile }) {
-  const navigate = useNavigate();
+export default function Header({ title = "Dashboard", subtitle, session, profile }) {
   const [query, setQuery] = useState("");
-  const [loggingOut, setLoggingOut] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-
-  const handleLogout = async () => {
-    setLoggingOut(true);
-    await supabase.auth.signOut();
-    navigate("/", { replace: true });
-  };
+  const notifRef = useRef(null);
 
   const userName = profile?.nome || session?.user?.email?.split("@")[0] || "Usuário";
   const userInitial = userName.charAt(0).toUpperCase();
 
   const formatRole = (perfil) => {
     if (!perfil) return "Atendente";
-    const normalized = String(perfil).toLowerCase();
-    if (normalized === "admin") return "Admin";
-    if (normalized === "supervisor") return "Supervisor";
-    if (normalized === "supervisora") return "Supervisora";
-    if (normalized === "atendente") return "Atendente";
-    return perfil;
+    const map = { admin: "Admin", supervisor: "Supervisor", supervisora: "Supervisora", atendente: "Atendente" };
+    return map[String(perfil).toLowerCase()] || perfil;
   };
 
-  const displayRole = formatRole(profile?.perfil);
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotificationsOpen(false);
+      }
+    }
+    if (notificationsOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [notificationsOpen]);
 
   return (
-    <header className="flex w-full min-w-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-4 shadow-sm sticky top-0 z-40 sm:px-6">
+    <header className="sticky top-0 z-40 flex w-full min-w-0 items-center justify-between gap-4 border-b border-slate-200/80 bg-white/80 backdrop-blur-xl px-6 py-3">
       <div className="min-w-0">
-        <h2 className="truncate text-lg font-semibold text-slate-900">{title}</h2>
-        <p className="mt-0.5 truncate text-xs text-slate-500">Bem-vindo ao Sistema de Agendamento</p>
+        <h1 className="text-lg font-bold text-slate-900 tracking-tight">{title}</h1>
+        {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
       </div>
 
-      <div className="flex shrink-0 items-center gap-3 sm:gap-6">
-        <div className="relative hidden sm:block w-64">
-          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+      <div className="flex shrink-0 items-center gap-2">
+        {/* Search */}
+        <div className="relative hidden md:block">
+          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Pesquisar..."
-            className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-800 placeholder-slate-500 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="w-56 rounded-xl border border-slate-200 bg-slate-50/80 py-2 pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10 focus:outline-none transition-all duration-200"
+            aria-label="Pesquisar"
           />
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
-          <div className="relative">
+        {/* Notifications */}
+        <div className="relative" ref={notifRef}>
           <button
             type="button"
-            onClick={() => setNotificationsOpen((open) => !open)}
+            onClick={() => setNotificationsOpen((v) => !v)}
             aria-expanded={notificationsOpen}
-            aria-label="Abrir notificações"
-            className="relative p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition group"
+            aria-label="Notificações"
+            className="relative p-2.5 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all duration-200"
           >
             <FaBell size={16} />
-            <span className="absolute top-1 right-1 h-2 w-2 bg-rose-500 rounded-full group-hover:scale-125 transition" />
+            <span className="absolute top-2 right-2 h-2 w-2 bg-danger rounded-full ring-2 ring-white" />
           </button>
-          {notificationsOpen ? (
-            <div className="absolute right-0 top-full z-50 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
-              <p className="font-semibold text-slate-900">Notificações</p>
-              <p className="mt-2 text-sm text-slate-600">Nenhuma nova notificação no momento.</p>
+          {notificationsOpen && (
+            <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl animate-scale-in">
+              <p className="font-bold text-slate-900 text-sm">Notificações</p>
+              <div className="mt-3 py-6 text-center">
+                <FaBell className="mx-auto text-slate-300 mb-2" size={24} />
+                <p className="text-sm text-slate-400">Nenhuma notificação nova</p>
+              </div>
             </div>
-          ) : null}
-          </div>
+          )}
+        </div>
 
-          <div className="flex items-center gap-2 border-l border-slate-200 pl-3 sm:gap-3 sm:pl-4">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center text-xs font-semibold text-white">
-              {userInitial}
-            </div>
-            <div className="hidden sm:block text-sm">
-              <div className="font-medium text-slate-800">{userName}</div>
-              <div className="text-xs text-slate-500">{displayRole}</div>
-            </div>
-            <button
-              onClick={handleLogout}
-              disabled={loggingOut}
-              className="p-2 rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition disabled:opacity-50 ml-2"
-              title="Sair"
-            >
-              <FaSignOutAlt size={14} />
-            </button>
+        {/* User */}
+        <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center text-xs font-bold text-white shadow-sm">
+            {userInitial}
+          </div>
+          <div className="hidden lg:block">
+            <div className="text-sm font-semibold text-slate-800 leading-tight">{userName}</div>
+            <div className="text-2xs text-slate-400 font-medium">{formatRole(profile?.perfil)}</div>
           </div>
         </div>
       </div>

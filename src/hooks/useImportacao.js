@@ -1,4 +1,4 @@
-import { getAreaFromBairro } from "../lib/bairroAreaMap";
+﻿import { getAreaFromBairro } from "../lib/bairroAreaMap";
 import { useRef, useState } from "react";
 import { read, utils } from "xlsx";
 import { supabase } from "../lib/supabase";
@@ -268,7 +268,7 @@ async function loadAttendants() {
     }));
   }
 
-  console.warn("Tabela 'usuarios' não disponível, tentando 'atendentes' como fallback:", userError.message);
+  console.warn("Tabela 'usuarios' nÃ£o disponÃ­vel, tentando 'atendentes' como fallback:", userError.message);
   const targetColumns = "id,nome,ativo,turno_inicio,turno_fim,limite_atendimentos";
   const { data, error } = await supabase.from("atendentes").select(targetColumns);
 
@@ -393,7 +393,7 @@ async function findServiceByName(servicoNome) {
 
 async function findOrCreateCliente({ nome, telefone }, currentUserId = null) {
   if (!nome && !telefone) {
-    throw new Error("Cliente sem nome ou telefone não pode ser criado.");
+    throw new Error("Cliente sem nome ou telefone nÃ£o pode ser criado.");
   }
 
   const normalizedPhone = telefone ? String(telefone).replace(/\D/g, "") : null;
@@ -447,7 +447,7 @@ async function findOrCreateCliente({ nome, telefone }, currentUserId = null) {
 
   if (insertError) {
     if (insertError.message?.includes("row-level security")) {
-      throw new Error("Permissão negada ao inserir cliente. Verifique as políticas RLS no Supabase.");
+      throw new Error("PermissÃ£o negada ao inserir cliente. Verifique as polÃ­ticas RLS no Supabase.");
     }
     throw new Error(insertError.message);
   }
@@ -497,7 +497,7 @@ export function useImportacao() {
     if (!selected) return;
 
     if (!/\.xlsx?$|\.xls$/i.test(selected.name)) {
-      setValidationError("Selecione um arquivo .xlsx ou .xls válido.");
+      setValidationError("Selecione um arquivo .xlsx ou .xls vÃ¡lido.");
       return;
     }
 
@@ -511,7 +511,7 @@ export function useImportacao() {
       const workbook = read(buffer, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       if (!sheet) {
-        throw new Error("Não foi possível ler a primeira planilha.");
+        throw new Error("NÃ£o foi possÃ­vel ler a primeira planilha.");
       }
 
       const rawRows = utils.sheet_to_json(sheet, { header: 1, defval: "" });
@@ -524,7 +524,7 @@ export function useImportacao() {
 
       if (missingColumns.length) {
         setValidationError(
-          `Colunas obrigatórias ausentes: ${missingColumns.join(", ")}. Use pelo menos protocolo, cliente_nome, telefone e data_agendamento.`
+          `Colunas obrigatÃ³rias ausentes: ${missingColumns.join(", ")}. Use pelo menos protocolo, cliente_nome, telefone e data_agendamento.`
         );
         return;
       }
@@ -534,8 +534,8 @@ export function useImportacao() {
 
       console.log("Import preview headers:", headerRow);
       console.log("Mapped headers:", mappedHeaders);
-      console.log("Linhas válidas encontradas:", parsedRows.length);
-      console.log("Pré-visualização de linhas:", preview);
+      console.log("Linhas vÃ¡lidas encontradas:", parsedRows.length);
+      console.log("PrÃ©-visualizaÃ§Ã£o de linhas:", preview);
 
       setHeaders(mappedHeaders);
       setPreviewRows(preview);
@@ -550,7 +550,7 @@ export function useImportacao() {
 
   async function processImport() {
     if (!file) {
-      setError("Selecione um arquivo antes de processar a importação.");
+      setError("Selecione um arquivo antes de processar a importaÃ§Ã£o.");
       return;
     }
 
@@ -570,7 +570,7 @@ export function useImportacao() {
         const workbook = read(buffer, { type: "array" });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         if (!sheet) {
-          throw new Error("Não foi possível ler a primeira planilha.");
+          throw new Error("NÃ£o foi possÃ­vel ler a primeira planilha.");
         }
 
         const { headerRow, range } = getSheetHeaders(sheet);
@@ -585,11 +585,11 @@ export function useImportacao() {
 
     if (!rowsToProcess.length) {
       setProcessing(false);
-      setError("Não há registros para importar.");
+      setError("NÃ£o hÃ¡ registros para importar.");
       return;
     }
 
-    console.log("Importação iniciada", {
+    console.log("ImportaÃ§Ã£o iniciada", {
       fileName,
       rowCount: rowsToProcess.length,
       sampleRows: rowsToProcess.slice(0, 5),
@@ -608,7 +608,7 @@ export function useImportacao() {
       const { data: { session } = {} } = await supabase.auth.getSession();
       const currentUserId = session?.user?.id || null;
       if (!currentUserId) {
-        console.warn("Nenhuma sessão de usuário ativa encontrada; agendamentos importados podem ser visíveis apenas se criados_por for definido corretamente.");
+        console.warn("Nenhuma sessÃ£o de usuÃ¡rio ativa encontrada; agendamentos importados podem ser visÃ­veis apenas se criados_por for definido corretamente.");
       }
 
       const defaultService = await loadDefaultService();
@@ -647,7 +647,7 @@ export function useImportacao() {
 
       for (let i = 0; i < rowsToProcess.length; i += batchSize) {
         if (cancelRef.current) {
-          setError("Importação cancelada pelo usuário.");
+          setError("ImportaÃ§Ã£o cancelada pelo usuÃ¡rio.");
           break;
         }
 
@@ -664,14 +664,14 @@ export function useImportacao() {
           if (!protocolo) {
             summary.erros += 1;
             summary.errorDetails.push(
-              `Linha ${row._rowNumber}: protocolo rejeitado. Coluna "${row._sourceColumns?.protocolo || "protocolo"}", valor ${displayValue(row.protocolo)}; motivo: célula vazia ou fórmula sem resultado.`
+              `Linha ${row._rowNumber}: protocolo rejeitado. Coluna "${row._sourceColumns?.protocolo || "protocolo"}", valor ${displayValue(row.protocolo)}; motivo: cÃ©lula vazia ou fÃ³rmula sem resultado.`
             );
             return;
           }
 
           if (!dataAgendamento || !isValidDate(dataAgendamento)) {
             summary.erros += 1;
-            summary.errorDetails.push(`Linha ${row._rowNumber}: data_agendamento inválida para protocolo ${protocolo}.`);
+            summary.errorDetails.push(`Linha ${row._rowNumber}: data_agendamento invÃ¡lida para protocolo ${protocolo}.`);
             return;
           }
 
@@ -685,11 +685,11 @@ export function useImportacao() {
             if (currentStatus === "finalizado" || currentStatus === "cancelado") {
               summary.ignorados += 1;
               summary.errorDetails.push(
-                `Linha ${row._rowNumber}: protocolo ${protocolo} ignorado porque já está ${currentStatus}.`
+                `Linha ${row._rowNumber}: protocolo ${protocolo} ignorado porque jÃ¡ estÃ¡ ${currentStatus}.`
               );
-              console.log(`Ignorando protocolo ${protocolo} já ${currentStatus}`);
+              console.log(`Ignorando protocolo ${protocolo} jÃ¡ ${currentStatus}`);
               try {
-                await supabase.from("historico_movimentacao").insert([{ agendamento_id: existing.id, acao: "ignorado", descricao: `Já ${currentStatus} na importação`, criado_em: createdAt }]);
+                await supabase.from("historico_movimentacao").insert([{ agendamento_id: existing.id, acao: "ignorado", descricao: `JÃ¡ ${currentStatus} na importaÃ§Ã£o`, criado_em: createdAt }]);
               } catch (e) {
                 console.debug('historico insert ignored', e);
               }
@@ -700,7 +700,8 @@ export function useImportacao() {
               const updatePayload = {
                 status: targetStatus,
                 data_agendamento: formattedDate,
-                observacao: `Atualizado pela importação em ${new Date(createdAt).toLocaleString()}`,
+                protocolo: protocolo || null,
+                observacao: `Atualizado pela importaÃ§Ã£o em ${new Date(createdAt).toLocaleString()}`,
                 updated_at: createdAt,
               };
 
@@ -719,7 +720,7 @@ export function useImportacao() {
               } else {
                 summary.atualizados += 1;
                 try {
-                  await supabase.from("historico_movimentacao").insert([{ agendamento_id: existing.id, acao: "atualizado", descricao: "Atualizado pela importação", criado_em: createdAt }]);
+                  await supabase.from("historico_movimentacao").insert([{ agendamento_id: existing.id, acao: "atualizado", descricao: "Atualizado pela importaÃ§Ã£o", criado_em: createdAt }]);
                 } catch (e) {
                   console.debug('historico insert ignored', e);
                 }
@@ -732,7 +733,7 @@ export function useImportacao() {
             return;
           }
 
-          // criação de novo agendamento
+          // criaÃ§Ã£o de novo agendamento
           try {
             // cliente: tente cache por telefone, depois por nome
             const clienteKey = telefone || clienteNome;
@@ -751,7 +752,7 @@ export function useImportacao() {
                 })
               : null;
 
-            // serviço: cache por nome
+            // serviÃ§o: cache por nome
             const serviceKey = String(row.servico_nome || "").trim();
             let selectedService = null;
             if (serviceKey) {
@@ -766,12 +767,13 @@ export function useImportacao() {
             const insertPayload = {
               cliente_id: clienteId,
               servico_id: selectedService?.id || defaultService?.id || null,
+              protocolo: protocolo || null,
               area: getAreaFromBairro(String(normalizeCellValue(row.bairro))) || String(normalizeCellValue(row.area)) || null,
               bairro: String(normalizeCellValue(row.bairro)) || null,
               data_agendamento: formattedDate,
               hora_agendamento: horaAgendamento || "00:00",
               status: "novo",
-              observacao: `Importado da base diária em ${new Date(createdAt).toLocaleString()}`,
+              observacao: `Importado da base diÃ¡ria em ${new Date(createdAt).toLocaleString()}`,
               criado_por: currentUserId || attendant?.id || null,
               updated_at: createdAt,
             };
@@ -791,7 +793,7 @@ export function useImportacao() {
               summary.novos += 1;
               console.log("Novo agendamento criado", protocolo, newRecord?.id);
               try {
-                await supabase.from("historico_movimentacao").insert([{ agendamento_id: newRecord.id, acao: "novo", descricao: "Importado da base diária", criado_em: createdAt }]);
+                await supabase.from("historico_movimentacao").insert([{ agendamento_id: newRecord.id, acao: "novo", descricao: "Importado da base diÃ¡ria", criado_em: createdAt }]);
               } catch (e) {
                 console.debug('historico insert ignored', e);
               }
@@ -814,7 +816,7 @@ export function useImportacao() {
       setShowReport(true);
       window.dispatchEvent(new CustomEvent("agendamentos:updated", { detail: summary }));
     } catch (err) {
-      setError(err.message || "Falha na importação.");
+      setError(err.message || "Falha na importaÃ§Ã£o.");
     } finally {
       setProcessing(false);
       setProgress(100);

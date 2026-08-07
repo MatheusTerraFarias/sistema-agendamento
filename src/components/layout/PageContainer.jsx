@@ -1,15 +1,8 @@
-import Sidebar from "./Sidebar";
-import Header from "./Header";
-
-export default function PageContainer({ children, title, session, profile }) {
+﻿export default function PageContainer({ children, className = "" }) {
   return (
-    <div className="flex min-h-screen w-full min-w-0 max-w-full bg-gradient-to-br from-slate-50 to-slate-100">
-      <Sidebar profile={profile} />
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <Header title={title} session={session} profile={profile} />
-        <main className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6">
-          <div className="mx-auto w-full min-w-0 max-w-7xl">{children}</div>
-        </main>
+    <div className={`page-anim flex-1 overflow-y-auto bg-slate-50/50 ${className}`}>
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {children}
       </div>
     </div>
   );

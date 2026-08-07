@@ -1,4 +1,7 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+
+const fieldClass = "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none disabled:bg-slate-50 disabled:opacity-50";
+const labelClass = "block text-sm font-medium text-slate-700 mb-1.5";
 
 export default function AgendamentoForm({ initialData = {}, clientes = [], servicos = [], onSubmit, onClose, loading }) {
   const [clienteId, setClienteId] = useState(initialData.cliente_id || "");
@@ -11,7 +14,6 @@ export default function AgendamentoForm({ initialData = {}, clientes = [], servi
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     await onSubmit({
       cliente_id: clienteId ? Number(clienteId) : null,
       servico_id: servicoId ? Number(servicoId) : null,
@@ -24,120 +26,77 @@ export default function AgendamentoForm({ initialData = {}, clientes = [], servi
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <label className="block">
-          <span className="text-sm font-semibold text-slate-700">Cliente</span>
-          <select
-            value={clienteId}
-            onChange={(event) => setClienteId(event.target.value)}
-            required
-            className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-          >
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className={labelClass}>Cliente</label>
+          <select value={clienteId} onChange={(e) => setClienteId(e.target.value)} required className={fieldClass}>
             <option value="">Selecione um cliente</option>
-            {clientes.map((cliente) => (
-              <option key={cliente.id} value={cliente.id}>
-                {cliente.nome}
-              </option>
-            ))}
+            {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
           </select>
-        </label>
-
-        <label className="block">
-          <span className="text-sm font-semibold text-slate-700">Serviço</span>
-          <select
-            value={servicoId}
-            onChange={(event) => setServicoId(event.target.value)}
-            required
-            className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-          >
+        </div>
+        <div>
+          <label className={labelClass}>Serviço</label>
+          <select value={servicoId} onChange={(e) => setServicoId(e.target.value)} required className={fieldClass}>
             <option value="">Selecione um serviço</option>
-            {servicos.map((servico) => (
-              <option key={servico.id} value={servico.id}>
-                {servico.nome}
-              </option>
-            ))}
+            {servicos.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
           </select>
-        </label>
+        </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <label className="block">
-          <span className="text-sm font-semibold text-slate-700">Data</span>
-          <input
-            type="date"
-            value={dataAgendamento}
-            onChange={(event) => setDataAgendamento(event.target.value)}
-            required
-            className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-          />
-        </label>
-
-        <label className="block">
-          <span className="text-sm font-semibold text-slate-700">Hora</span>
-          <input
-            type="time"
-            value={horaAgendamento}
-            onChange={(event) => setHoraAgendamento(event.target.value)}
-            required
-            className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-          />
-        </label>
-
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label className={labelClass}>Data</label>
+          <input type="date" value={dataAgendamento} onChange={(e) => setDataAgendamento(e.target.value)} required className={fieldClass} />
+        </div>
+        <div>
+          <label className={labelClass}>Hora</label>
+          <input type="time" value={horaAgendamento} onChange={(e) => setHoraAgendamento(e.target.value)} required className={fieldClass} />
+        </div>
         {initialData.id ? (
-          <label className="block">
-            <span className="text-sm font-semibold text-slate-700">Status</span>
-            <select
-              value={status}
-              onChange={(event) => setStatus(event.target.value)}
-              className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-            >
+          <div>
+            <label className={labelClass}>Status</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value)} className={fieldClass}>
               <option value="novo">Novo</option>
               <option value="em_andamento">Em andamento</option>
               <option value="finalizado">Finalizado</option>
               <option value="cancelado">Cancelado</option>
             </select>
-          </label>
-        ) : (
-          <div />
-        )}
+          </div>
+        ) : <div />}
       </div>
 
-      <label className="block">
-        <span className="text-sm font-semibold text-slate-700">Bairro</span>
-        <input
-          type="text"
-          value={bairro}
-          onChange={(event) => setBairro(event.target.value)}
-          placeholder="Bairro do cliente"
-          className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
-        />
-      </label>
+      <div>
+        <label className={labelClass}>Bairro</label>
+        <input type="text" value={bairro} onChange={(e) => setBairro(e.target.value)} placeholder="Ex: Vila Mariana" className={fieldClass} />
+      </div>
 
-      <label className="block">
-        <span className="text-sm font-semibold text-slate-700">Observação</span>
+      <div>
+        <label className={labelClass}>Observação</label>
         <textarea
           value={observacao}
-          onChange={(event) => setObservacao(event.target.value)}
+          onChange={(e) => setObservacao(e.target.value)}
           placeholder="Notas adicionais ou contexto do agendamento"
           rows={3}
-          className="mt-1 w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
+          className={`${fieldClass} resize-none`}
         />
-      </label>
+      </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-        >
+      <div className="flex flex-col gap-3 sm:flex-row sm:justify-end pt-2">
+        <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all duration-200 active:scale-[0.98]">
           Cancelar
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+          className="rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2"
         >
+          {loading && (
+            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          )}
           {initialData.id ? "Salvar alterações" : "Criar agendamento"}
         </button>
       </div>

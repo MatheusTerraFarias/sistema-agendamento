@@ -1,4 +1,4 @@
-import { getAreaFromBairro } from "../lib/bairroAreaMap";
+﻿import { getAreaFromBairro } from "../lib/bairroAreaMap";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -57,7 +57,7 @@ export function useAgendamentos() {
 
     if (Array.isArray(data)) {
       if (data.length > 1) {
-        console.warn("Usuário duplicado encontrado em usuarios, usando o primeiro registro.", userId);
+        console.warn("UsuÃ¡rio duplicado encontrado em usuarios, usando o primeiro registro.", userId);
       }
       setProfile(data[0] || null);
       return;
@@ -373,7 +373,7 @@ export function useAgendamentos() {
     const agendamento = agendamentoResponse.data;
     const deAtendente = atendentes.find((user) => user.id === agendamento.criado_por);
     const paraAtendente = atendentes.find((user) => user.id === paraAtendenteId);
-    const nota = `Reatribuído de ${deAtendente?.nome || "desconhecido"} para ${paraAtendente?.nome || "desconhecido"}: ${motivo}`;
+    const nota = `ReatribuÃ­do de ${deAtendente?.nome || "desconhecido"} para ${paraAtendente?.nome || "desconhecido"}: ${motivo}`;
     const observacaoAtual = agendamento.observacao ? `${agendamento.observacao}\n${nota}` : nota;
 
     const { error } = await supabase
@@ -416,7 +416,7 @@ export function useAgendamentos() {
     const now = new Date().toISOString();
     const results = await Promise.all((selected || []).map((item) => {
       const source = atendentes.find((user) => user.id === item.criado_por);
-      const note = `Reatribuído de ${source?.nome || "desconhecido"} para ${target?.nome || "desconhecido"}: ${motivo.trim()}`;
+      const note = `ReatribuÃ­do de ${source?.nome || "desconhecido"} para ${target?.nome || "desconhecido"}: ${motivo.trim()}`;
       return supabase.from("agendamentos").update({
         criado_por: paraAtendenteId,
         observacao: item.observacao ? `${item.observacao}\n${note}` : note,
@@ -455,5 +455,6 @@ export function useAgendamentos() {
     reatribuirAgendamento,
     reatribuirAgendamentos,
     createUsuario,
+    deleteUsuario,
   };
 }
