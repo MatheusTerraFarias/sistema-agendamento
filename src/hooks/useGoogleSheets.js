@@ -18,8 +18,16 @@ export function useGoogleSheets({ autoSync = true } = {}) {
     else setLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/sheets");
-      const data = await response.json();
+      const url = new URL('/api/sheets', window.location.origin).toString();
+      const response = await fetch(url);
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseErr) {
+        const text = await response.text().catch(() => '<no-body>');
+        throw new Error(`Invalid JSON from /api/sheets (status=${response.status}): ${text}`);
+      }
+      if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
       if (data.error) throw new Error(data.error);
       if (mountedRef.current) {
         setRows(data.rows || []);
