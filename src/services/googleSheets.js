@@ -1,14 +1,13 @@
-﻿import { google } from "googleapis";
+import { google } from "googleapis";
 
 const SPREADSHEET_ID = import.meta.env.VITE_GOOGLE_SHEET_ID || "1S7gJzRixU2lIroN4nblMXsq671QQUDb4";
 const SHEET_NAME = "BASE";
 
-// Para uso com API key (planilha pública compartilhada)
 const API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "";
 
 export async function fetchSheetData() {
   if (!API_KEY) {
-    console.warn("VITE_GOOGLE_API_KEY não configurada. Usando modo offline.");
+    console.warn("VITE_GOOGLE_API_KEY n�o configurada. Usando modo offline.");
     return null;
   }
 
@@ -36,28 +35,49 @@ export async function fetchSheetData() {
   }
 }
 
-// Mapear colunas da planilha para o modelo do app
+function normalizeField(s) {
+  return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+function findCol(row, terms) {
+  for (const [k, v] of Object.entries(row)) {
+    const nk = normalizeField(k);
+    for (const t of terms) {
+      if (nk.includes(t)) return v;
+    }
+  }
+  return "";
+}
+
+function cleanProtocolo(val) {
+  const s = String(val || "").trim();
+  const num = parseFloat(s);
+  if (!isNaN(num) && s.includes(".")) return String(Math.floor(num));
+  return s;
+}
+
 export function mapSheetToAgendamentos(rows) {
   return rows.map((row) => ({
-    protocolo: row["chamado"] || row["nº chamado"] || "",
-    cliente_nome: row["nome"] || "",
-    telefone: row["telefone"] || row["tel"] || "",
-    status: mapStatus(row["status da atividade"] || ""),
-    data_agendamento: parseSheetDate(row["data"] || ""),
-    bairro: extractBairro(row["endereço"] || row["endereco"] || ""),
-    atendente_nome: row["recurso"] || "",
-    servico_nome: row["intervalo"] || "",
-    hora_agendamento: row["início"] || row["inicio"] || "",
+    protocolo: cleanProtocolo(findCol(row, ["ordem de servico", "ordem de servi�o", "chamado", "n� chamado", "numero da os", "numero_da_os", "protocolo"])),
+    cliente_nome: findCol(row, ["nome"]),
+    telefone: findCol(row, ["telefone celular", "telefone", "tel"]),
+    status: mapStatus(findCol(row, ["status da atividade"]) || findCol(row, ["status"])),
+    data_agendamento: parseSheetDate(findCol(row, ["data"])),
+    bairro: findCol(row, ["bairro"]),
+    area: findCol(row, ["territorio sp", "territorio", "area"]) || null,
+    atendente_nome: findCol(row, ["recurso"]),
+    servico_nome: findCol(row, ["intervalo"]),
+    hora_agendamento: findCol(row, ["inicio"]),
   }));
 }
 
 function mapStatus(sheetStatus) {
-  const s = (sheetStatus || "").toLowerCase().trim();
+  const s = normalizeField(sheetStatus);
+  if (s.includes("nao conclu")) return "nao_concluido";
   if (s.includes("conclu")) return "finalizado";
   if (s.includes("inici")) return "em_andamento";
   if (s.includes("pendente")) return "novo";
   if (s.includes("cancel")) return "cancelado";
-  if (s.includes("não conclu") || s.includes("nao conclu")) return "em_andamento";
   return "novo";
 }
 

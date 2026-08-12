@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabase, supabaseConfigured } from "../lib/supabase";
 
 export default function ProtectedRoute({ children }) {
   const [checking, setChecking] = useState(true);
@@ -11,6 +11,14 @@ export default function ProtectedRoute({ children }) {
     let mounted = true;
 
     async function verifySession() {
+      if (!supabaseConfigured) {
+        if (mounted) {
+          setAuthError('Supabase não está configurado corretamente. Verifique seu .env.local.');
+          setChecking(false);
+        }
+        return;
+      }
+
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (!mounted) return;

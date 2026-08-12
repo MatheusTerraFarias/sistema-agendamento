@@ -3,19 +3,21 @@
 const fieldClass = "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/10 focus:outline-none disabled:bg-slate-50 disabled:opacity-50";
 const labelClass = "block text-sm font-medium text-slate-700 mb-1.5";
 
-export default function AgendamentoForm({ initialData = {}, clientes = [], servicos = [], onSubmit, onClose, loading }) {
-  const [clienteId, setClienteId] = useState(initialData.cliente_id || "");
+export default function AgendamentoForm({ initialData = {}, servicos = [], onSubmit, onClose, loading, isSupervisor = true }) {
+  const [clienteNome, setClienteNome] = useState(initialData.cliente_nome || "");
   const [servicoId, setServicoId] = useState(initialData.servico_id || "");
   const [dataAgendamento, setDataAgendamento] = useState(initialData.data_agendamento || "");
   const [horaAgendamento, setHoraAgendamento] = useState(initialData.hora_agendamento || "");
   const [observacao, setObservacao] = useState(initialData.observacao || "");
   const [status, setStatus] = useState(initialData.status || "novo");
   const [bairro, setBairro] = useState(initialData.bairro || "");
+  const [telefone, setTelefone] = useState(initialData.telefone || "");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     await onSubmit({
-      cliente_id: clienteId ? Number(clienteId) : null,
+      cliente_nome: clienteNome.trim() || null,
+      telefone: telefone.trim() || null,
       servico_id: servicoId ? Number(servicoId) : null,
       data_agendamento: dataAgendamento || null,
       hora_agendamento: horaAgendamento || null,
@@ -27,31 +29,53 @@ export default function AgendamentoForm({ initialData = {}, clientes = [], servi
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label className={labelClass}>Cliente</label>
-          <select value={clienteId} onChange={(e) => setClienteId(e.target.value)} required className={fieldClass}>
-            <option value="">Selecione um cliente</option>
-            {clientes.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}
-          </select>
+      {isSupervisor ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className={labelClass}>Cliente</label>
+            <input type="text" value={clienteNome} onChange={(e) => setClienteNome(e.target.value)} placeholder="Nome do cliente" required className={fieldClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Telefone</label>
+            <input type="text" value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-9999" className={fieldClass} />
+          </div>
         </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className={labelClass}>Cliente</label>
+            <input type="text" value={clienteNome} readOnly className={fieldClass + " bg-slate-50"} />
+          </div>
+          <div>
+            <label className={labelClass}>Telefone</label>
+            <input type="text" value={telefone} readOnly className={fieldClass + " bg-slate-50"} />
+          </div>
+        </div>
+      )}
+
+      {isSupervisor ? (
         <div>
-          <label className={labelClass}>Serviço</label>
-          <select value={servicoId} onChange={(e) => setServicoId(e.target.value)} required className={fieldClass}>
-            <option value="">Selecione um serviço</option>
+          <label className={labelClass}>Servico</label>
+          <select value={servicoId} onChange={(e) => setServicoId(e.target.value)} className={fieldClass}>
+            <option value="">Selecione um servico</option>
             {servicos.map((s) => <option key={s.id} value={s.id}>{s.nome}</option>)}
           </select>
         </div>
-      </div>
+      ) : (
+        <div>
+          <label className={labelClass}>Servico</label>
+          <input type="text" value={servicos.find((s) => String(s.id) === String(servicoId))?.nome || ""} readOnly className={fieldClass + " bg-slate-50"} />
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
           <label className={labelClass}>Data</label>
-          <input type="date" value={dataAgendamento} onChange={(e) => setDataAgendamento(e.target.value)} required className={fieldClass} />
+          <input type="date" value={dataAgendamento} onChange={(e) => setDataAgendamento(e.target.value)} className={fieldClass} />
         </div>
         <div>
           <label className={labelClass}>Hora</label>
-          <input type="time" value={horaAgendamento} onChange={(e) => setHoraAgendamento(e.target.value)} required className={fieldClass} />
+          <input type="time" value={horaAgendamento} onChange={(e) => setHoraAgendamento(e.target.value)} className={fieldClass} />
         </div>
         {initialData.id ? (
           <div>
@@ -66,17 +90,23 @@ export default function AgendamentoForm({ initialData = {}, clientes = [], servi
         ) : <div />}
       </div>
 
+      {isSupervisor ? (
+        <div>
+          <label className={labelClass}>Bairro</label>
+          <input type="text" value={bairro} onChange={(e) => setBairro(e.target.value)} placeholder="Ex: Vila Mariana" className={fieldClass} />
+        </div>
+      ) : (
+        <div>
+          <label className={labelClass}>Bairro</label>
+          <input type="text" value={bairro} readOnly className={fieldClass + " bg-slate-50"} />
+        </div>
+      )}
       <div>
-        <label className={labelClass}>Bairro</label>
-        <input type="text" value={bairro} onChange={(e) => setBairro(e.target.value)} placeholder="Ex: Vila Mariana" className={fieldClass} />
-      </div>
-
-      <div>
-        <label className={labelClass}>Observação</label>
+        <label className={labelClass}>Observacao</label>
         <textarea
           value={observacao}
           onChange={(e) => setObservacao(e.target.value)}
-          placeholder="Notas adicionais ou contexto do agendamento"
+          placeholder="Notas adicionais ou contexto do chamado"
           rows={3}
           className={`${fieldClass} resize-none`}
         />
@@ -97,7 +127,7 @@ export default function AgendamentoForm({ initialData = {}, clientes = [], servi
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
             </svg>
           )}
-          {initialData.id ? "Salvar alterações" : "Criar agendamento"}
+          {initialData.id ? "Salvar alteracoes" : "Criar chamado"}
         </button>
       </div>
     </form>

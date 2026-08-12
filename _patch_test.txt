@@ -1,0 +1,4 @@
+line1
+const z = "quoted";
+const y = single-line;
+const x = "abc";

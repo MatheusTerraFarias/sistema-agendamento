@@ -1,0 +1,64 @@
+*** Begin Patch
+*** Update File: src/hooks/useAgendamentos.js
+@@
+   const setActiveFilter = useCallback((f) => { filterRef.current = f; }, []);
++
++  const CAMPO_LABELS = {
++    cliente_id: "Cliente",
++    servico_id: "Servico",
++    data_agendamento: "Data",
++    hora_agendamento: "Hora",
++    status: "Status",
++    bairro: "Bairro",
++    area: "Area",
++    observacao: "Observacao",
++    criado_por: "Atendente",
++    distribuido_para: "Atendente designado",
++  };
++
++  const STATUS_LABELS_HIST = {
++    novo: "Novo",
++    em_andamento: "Em andamento",
++    finalizado: "Finalizado",
++    cancelado: "Cancelado",
++    nao_concluido: "Nao concluido",
++  };
++
++  function formatValor(campo, valor) {
++    if (valor === null || valor === undefined || valor === "") return "-";
++    if (campo === "status") return STATUS_LABELS_HIST[valor] || valor;
++    return String(valor);
++  }
++
++  async function registrarHistorico({ agendamentoId, acao = "edicao", descricao = "", camposAlterados = [] }) {
++    if (!agendamentoId || !session?.user?.id) return;
++    try {
++      await supabase.from("historico_edicoes").insert([{
++        agendamento_id: agendamentoId,
++        usuario_id: session.user.id,
++        usuario_nome: profile?.nome || "",
++        acao,
++        descricao: String(descricao || "").slice(0, 1000),
++        campos_alterados: Array.isArray(camposAlterados) ? camposAlterados : [],
++      }]);
++    } catch (e) {
++      console.error("Erro ao registrar historico:", e.message);
++    }
++  }
++
++  function diffCampos(anterior, novo) {
++    const diffs = [];
++    for (const campo of Object.keys(novo || {})) {
++      const de = anterior?.[campo];
++      const para = novo[campo];
++      if (String(de ?? "") !== String(para ?? "")) {
++        diffs.push({
++          campo: CAMPO_LABELS[campo] || campo,
++          de: formatValor(campo, de),
++          para: formatValor(campo, para),
++        });
++      }
++    }
++    return diffs;
++  }
+*** End Patch

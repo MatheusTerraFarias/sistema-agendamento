@@ -1,9 +1,8 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+﻿import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Agendamentos from "./pages/Agendamentos";
-import Clientes from "./pages/Clientes";
 import Configuracoes from "./pages/Configuracoes";
 import Distribuicao from "./pages/Distribuicao";
 import Importar from "./pages/Importar";
@@ -31,7 +30,6 @@ function App() {
             >
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/agendamentos" element={<Agendamentos />} />
-              <Route path="/clientes" element={<Clientes />} />
               <Route
                 path="/importar"
                 element={

@@ -1,8 +1,31 @@
 ﻿import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://jjsgpttjqtdysdetouqv.supabase.co'
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impqc2dwdHRqcXRkeXNkZXRvdXF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzOTAzNTIsImV4cCI6MjA5NTk2NjM1Mn0.jsZu2QZA1_Xk1fhJsWtm5A6NeKDGMnTQrI6KaoqvKr4'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+
+function isPlaceholderUrl(value) {
+  const normalized = String(value || '').trim().toLowerCase()
+  return !normalized || normalized.includes('your-project.supabase.co') || normalized.includes('your-project.supabase') || normalized.includes('your-project') || normalized.includes('supabase.co') && normalized.includes('your-project') || normalized.includes('your-project.supabas') || normalized.includes('your-project.supabase');
+}
+
+function isPlaceholderKey(value) {
+  const normalized = String(value || '').trim().toLowerCase()
+  return !normalized || normalized.includes('your-anon-public-key') || normalized.includes('your_anon_key') || normalized.includes('anon_key') || normalized.includes('anon');
+}
+
+const supabaseConfigIssue = (() => {
+  if (!supabaseUrl) return 'VITE_SUPABASE_URL is not configured.'
+  if (!supabaseKey) return 'VITE_SUPABASE_ANON_KEY is not configured.'
+  if (isPlaceholderUrl(supabaseUrl)) return 'VITE_SUPABASE_URL appears to be a placeholder. Replace it with your actual Supabase project URL.'
+  if (isPlaceholderKey(supabaseKey)) return 'VITE_SUPABASE_ANON_KEY appears to be a placeholder. Replace it with your actual Supabase anon key.'
+  return null
+})()
+
+const supabaseConfigured = supabaseConfigIssue === null
+
+if (!supabaseConfigured) {
+  console.error('Supabase configuration issue:', supabaseConfigIssue)
+}
 
 let supabaseRequestCount = 0
 
@@ -24,15 +47,30 @@ const debugFetch = async (url, options) => {
   }
 }
 
-export const supabase = createClient(
-  supabaseUrl,
-  supabaseKey,
-  {
-    fetch: debugFetch,
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
+let supabase = null
+if (supabaseConfigured) {
+  supabase = createClient(
+    supabaseUrl,
+    supabaseKey,
+    {
+      fetch: import.meta.env.DEV ? debugFetch : fetch,
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    }
+  )
+} else {
+  // Export a proxy that throws a helpful error when used, instead of failing at import-time
+  supabase = new Proxy({}, {
+    get() {
+      throw new Error(`Supabase client is not configured. ${supabaseConfigIssue}`)
     },
-  }
-)
+    apply() {
+      throw new Error(`Supabase client is not configured. ${supabaseConfigIssue}`)
+    }
+  })
+}
+
+export { supabase, supabaseConfigured, supabaseConfigIssue }

@@ -1,4 +1,4 @@
-﻿import { getAreaFromBairro } from "../lib/bairroAreaMap";
+import { getAreaFromBairro } from "../lib/bairroAreaMap";
 import { useRef, useState } from "react";
 import { read, utils } from "xlsx";
 import { supabase } from "../lib/supabase";
@@ -43,6 +43,8 @@ const HEADER_ALIASES = {
   contato: "telefone",
   numero_os: "protocolo",
   numero_da_os: "protocolo",
+  ordem_de_servico: "protocolo",
+  ordem_de_serviço: "protocolo",
   codigo_contrato: "protocolo",
   territorio_sp: "area",
   territorio: "area",
@@ -68,6 +70,17 @@ function getMappedHeader(header) {
 function normalizeCellValue(value) {
   if (value === undefined || value === null) return "";
   return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : value;
+}
+
+function cleanProtocolo(val) {
+  if (val === undefined || val === null) return "";
+  if (typeof val === "number" && Number.isFinite(val)) {
+    return String(Math.floor(val));
+  }
+  const s = String(val).trim();
+  const num = parseFloat(s);
+  if (!isNaN(num) && s.includes(".") && Number.isFinite(num)) return String(Math.floor(num));
+  return s;
 }
 
 function getCellValue(cell) {
@@ -232,7 +245,7 @@ function normalizeStatus(value) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
   if (!raw) return "";
-  if (raw.includes("nao conclu")) return "em_andamento";
+  if (raw.includes("nao conclu") || raw.includes("não conclu")) return "nao_concluido";
   if (raw.includes("conclu")) return "finalizado";
   if (raw.includes("suspens")) return "em_andamento";
   if (raw.includes("finaliz")) return "finalizado";
@@ -392,67 +405,8 @@ async function findServiceByName(servicoNome) {
 }
 
 async function findOrCreateCliente({ nome, telefone }, currentUserId = null) {
-  if (!nome && !telefone) {
-    throw new Error("Cliente sem nome ou telefone nÃ£o pode ser criado.");
-  }
-
-  const normalizedPhone = telefone ? String(telefone).replace(/\D/g, "") : null;
-  const trimmedNome = nome ? String(nome).trim() : null;
-
-  // 1) Busca por telefone normalizado
-  if (normalizedPhone) {
-    const { data, error } = await supabase
-      .from("clientes")
-      .select("id,telefone")
-      .ilike("telefone", `%${normalizedPhone}%`)
-      .limit(1);
-
-    if (!error && data?.[0]?.id) return data[0].id;
-  }
-
-  // 2) Busca por nome (case-insensitive, match exato)
-  if (trimmedNome) {
-    const { data, error } = await supabase
-      .from("clientes")
-      .select("id,nome")
-      .ilike("nome", trimmedNome)
-      .limit(1);
-
-    if (!error && data?.[0]?.id) return data[0].id;
-  }
-
-  // 3) Criar novo cliente
-  const basePayload = { nome: trimmedNome || "Cliente importado" };
-  if (telefone) basePayload.telefone = telefone;
-
-  const insertPayload = { ...basePayload };
-  if (currentUserId) insertPayload.criado_por = currentUserId;
-
-  let { data: created, error: insertError } = await supabase
-    .from("clientes")
-    .insert([insertPayload])
-    .select("id")
-    .single();
-
-  if (insertError && insertError.message?.includes("Could not find the 'criado_por' column")) {
-    const retryPayload = { ...basePayload };
-    const { data: retryCreated, error: retryError } = await supabase
-      .from("clientes")
-      .insert([retryPayload])
-      .select("id")
-      .single();
-    if (!retryError) return retryCreated.id;
-    insertError = retryError;
-  }
-
-  if (insertError) {
-    if (insertError.message?.includes("row-level security")) {
-      throw new Error("PermissÃ£o negada ao inserir cliente. Verifique as polÃ­ticas RLS no Supabase.");
-    }
-    throw new Error(insertError.message);
-  }
-
-  return created.id;
+  // Tabela clientes nao existe no Supabase - retorna null para cliente_id
+  return null;
 }
 
 export function useImportacao() {
@@ -629,7 +583,7 @@ export function useImportacao() {
 
       // Pre-fetch existing protocols em lotes para evitar query demasiado longa
       const protocolSet = [
-        ...new Set(rowsToProcess.map((row) => String(normalizeCellValue(row.protocolo))).filter(Boolean)),
+        ...new Set(rowsToProcess.map((row) => cleanProtocolo(normalizeCellValue(row.protocolo))).filter(Boolean)),
       ];
       const existsData = await fetchExistingProtocols(protocolSet);
 
@@ -654,7 +608,7 @@ export function useImportacao() {
         const batch = rowsToProcess.slice(i, i + batchSize);
 
         const promises = batch.map(async (row) => {
-          const protocolo = String(normalizeCellValue(row.protocolo));
+          const protocolo = cleanProtocolo(normalizeCellValue(row.protocolo));
           const clienteNome = String(normalizeCellValue(row.cliente_nome));
           const telefone = String(normalizeCellValue(row.telefone));
           const status = normalizeStatus(row.status);
@@ -765,7 +719,6 @@ export function useImportacao() {
             }
 
             const insertPayload = {
-              cliente_id: clienteId,
               servico_id: selectedService?.id || defaultService?.id || null,
               protocolo: protocolo || null,
               area: getAreaFromBairro(String(normalizeCellValue(row.bairro))) || String(normalizeCellValue(row.area)) || null,

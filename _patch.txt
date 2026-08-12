@@ -1,0 +1,43 @@
+*** Begin Patch
+*** Update File: vite.config.js
+@@
+ function findCol(headers, ...candidates) {
+   for (const c of candidates) {
+-    const idx = headers.findIndex(h => h === c || h.includes(c))
++    const idx = headers.findIndex(h => h === c)
++    if (idx >= 0) return idx
++  }
++  for (const c of candidates) {
++    const idx = headers.findIndex(h => h.includes(c))
+     if (idx >= 0) return idx
+   }
+   return -1
+ }
+@@
+     const idx = {
+-      protocolo: findCol(hdrs, 'chamado', 'os', 'ordem', 'nº chamado', 'num chamado') || (() => { const yIdx = hdrs.length; return 24; })(),
++      // A OS fica na coluna Y (indice 24): "Ordem de Servico"
++      protocolo: (() => {
++        if (hdrs[24] && hdrs[24].includes('ordem')) return 24
++        const byName = findCol(hdrs, 'ordem de serviço', 'ordem de servico', 'nº chamado', 'numero chamado')
++        return byName >= 0 ? byName : 24
++      })(),
+       cliente: findCol(hdrs, 'nome', 'cliente', ' nome'),
+       telefone: findCol(hdrs, 'telefone', 'tel', 'phone'),
+       status: findCol(hdrs, 'status da atividade', 'status'),
+       data: findCol(hdrs, 'data', 'date'),
+-      endereco: findCol(hdrs, 'endereço', 'endereco', 'endereço', 'rua'),
++      endereco: findCol(hdrs, 'endereço', 'endereco', 'rua'),
+       bairro: findCol(hdrs, 'bairro'),
+     }
+@@
+       const dt = get(idx.data)
+       let dataAg = null
+-      const dp = dt.split('/')
+-      if (dp.length === 3) dataAg = dp[2]+'-'+dp[1].padStart(2,'0')+'-'+dp[0].padStart(2,'0')
+-      else dataAg = dt
++      const m = dt.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})/)
++      if (m) dataAg = m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0')
++      else dataAg = dt || null
+*** End Patch
+*** End Patch

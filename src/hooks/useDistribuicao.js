@@ -1,7 +1,7 @@
 ﻿import { useCallback, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 
-const AREAS = ["SP2", "ITAIM"];
+// AREAS is now derived dynamically from agendamentos data
 
 export function useDistribuicao() {
   const [agendamentos, setAgendamentos] = useState([]);
@@ -40,10 +40,25 @@ export function useDistribuicao() {
       }));
 
       setAgendamentos(items);
+      const allAreas = await loadAreas();
+      setAreas(allAreas);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  // Carregar areas distinctas de TODOS os agendamentos (nao apenas novos)
+  const loadAreas = useCallback(async () => {
+    try {
+      const { data, error: err } = await supabase.from("agendamentos").select("area");
+      if (err) throw err;
+      const set = new Set((data || []).map((a) => a.area).filter(Boolean));
+      return [...set].sort();
+    } catch (err) {
+      console.error("Erro ao carregar areas:", err);
+      return [];
     }
   }, []);
 
@@ -282,7 +297,7 @@ export function useDistribuicao() {
   }, [loadAgendamentos]);
 
   // Listas auxiliares para filtros
-  const areas = useMemo(() => AREAS, []);
+  const [areas, setAreas] = useState([]);
   const tipos = useMemo(() => {
     const set = new Set(agendamentos.map((a) => a.servico_nome).filter(Boolean));
     return [...set].sort();

@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 const SUPERVISOR_ROLES = ["supervisora", "supervisor", "admin"];
 const ATTENDANT_ROLES = ["atendente", "supervisor", "supervisora", "admin"];
 const ACTIVE_STATUSES = ["novo", "em_andamento"];
+const ATTENDANT_VISIBLE_STATUSES = ["confirmado", "tratar_os", "mensagem", "sem_contato", "outra_area", "outros", "novo", "em_andamento"];
 
 function isSupervisorProfile(perfil) {
   return SUPERVISOR_ROLES.includes(String(perfil || "").toLowerCase());
@@ -31,20 +32,77 @@ export function useAgendamentos() {
   const [profile, setProfile] = useState(null);
   const [agendamentos, setAgendamentos] = useState([]);
   const [atendentes, setAtendentes] = useState([]);
-  const [clientes, setClientes] = useState([]);
   const [servicos, setServicos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const clientesRef = useRef([]);
   const filterRef = useRef("todos");
 
   const isSupervisor = useMemo(() => isSupervisorProfile(profile?.perfil), [profile]);
 
-  useEffect(() => {
-    clientesRef.current = clientes;
-  }, [clientes]);
-
   const setActiveFilter = useCallback((f) => { filterRef.current = f; }, []);
+
+  const CAMPO_LABELS = {
+    cliente_nome: "Cliente",
+    telefone: "Telefone",
+    servico_id: "Servico",
+    data_agendamento: "Data",
+    hora_agendamento: "Hora",
+    status: "Status",
+    bairro: "Bairro",
+    area: "Area",
+    observacao: "Observacao",
+    criado_por: "Atendente",
+    distribuido_para: "Atendente designado",
+  };
+
+  const STATUS_LABELS_HIST = {
+  confirmado: "Confirmado",
+  concluido: "Concluido",
+  normalizado: "Normalizado",
+  mensagem: "Mensagem",
+  sem_contato: "Sem contato",
+  tratar_os: "Tratar OS",
+  outra_area: "Outra area",
+  outros: "Outros",
+};
+
+  function formatValor(campo, valor) {
+    if (valor === null || valor === undefined || valor === "") return "-";
+    if (campo === "status") return STATUS_LABELS_HIST[valor] || valor;
+    return String(valor);
+  }
+
+  async function registrarHistorico({ agendamentoId, acao = "edicao", descricao = "", camposAlterados = [] }) {
+    if (!agendamentoId || !session?.user?.id) return;
+    try {
+      await supabase.from("historico_edicoes").insert([{
+        agendamento_id: agendamentoId,
+        usuario_id: session.user.id,
+        usuario_nome: profile?.nome || "",
+        acao,
+        descricao: String(descricao || "").slice(0, 1000),
+        campos_alterados: Array.isArray(camposAlterados) ? camposAlterados : [],
+      }]);
+    } catch (e) {
+      console.error("Erro ao registrar historico:", e.message);
+    }
+  }
+
+  function diffCampos(anterior, novo) {
+    const diffs = [];
+    for (const campo of Object.keys(novo || {})) {
+      const de = anterior?.[campo];
+      const para = novo[campo];
+      if (String(de ?? "") !== String(para ?? "")) {
+        diffs.push({
+          campo: CAMPO_LABELS[campo] || campo,
+          de: formatValor(campo, de),
+          para: formatValor(campo, para),
+        });
+      }
+    }
+    return diffs;
+  }
 
   const loadProfile = useCallback(async (userId) => {
     const { data, error: profileError } = await supabase
@@ -60,7 +118,7 @@ export function useAgendamentos() {
 
     if (Array.isArray(data)) {
       if (data.length > 1) {
-        console.warn("UsuÃ¡rio duplicado encontrado em usuarios, usando o primeiro registro.", userId);
+        console.warn("Usuario duplicado encontrado em usuarios, usando o primeiro registro.", userId);
       }
       setProfile(data[0] || null);
       return;
@@ -73,7 +131,7 @@ export function useAgendamentos() {
     const { data, error } = await supabase
       .from("usuarios")
       .select("id, nome, perfil")
-      .order("nome", { ascending: true });
+      .order("nome", { ascending: true }).limit(10000);
 
     if (error) {
       setError(error.message);
@@ -138,27 +196,11 @@ export function useAgendamentos() {
     },
     [loadAtendentes]
   );
-
-  const loadClientes = useCallback(async () => {
-    const { data, error } = await supabase
-      .from("clientes")
-      .select("id, nome, telefone")
-      .order("nome", { ascending: true });
-
-    if (error) {
-      setError(error.message);
-      return [];
-    }
-
-    setClientes(data || []);
-    return data || [];
-  }, []);
-
   const loadServicos = useCallback(async () => {
     const { data, error } = await supabase
       .from("servicos")
       .select("id, nome")
-      .order("nome", { ascending: true });
+      .order("nome", { ascending: true }).limit(10000);
 
     if (error) {
       setError(error.message);
@@ -170,11 +212,11 @@ export function useAgendamentos() {
   }, []);
 
   const loadAgendamentos = useCallback(
-    async (filter = "todos", search = "", clients = null) => {
+    async (filter = "todos", search = "") => {
       setLoading(true);
       setError(null);
 
-      let query = supabase.from("agendamentos").select("*").order("created_at", { ascending: false });
+      let query = supabase.from("agendamentos").select("*").order("created_at", { ascending: false }).limit(10000);
 
       if (!isSupervisor && session?.user?.id) {
         query = query.or("criado_por.eq." + session.user.id + ",distribuido_para.eq." + session.user.id);
@@ -193,17 +235,21 @@ export function useAgendamentos() {
       }
 
       let items = data || [];
+      if (!isSupervisor && session?.user?.id) {
+        items = items.filter((item) => ATTENDANT_VISIBLE_STATUSES.includes(item.status));
+      }
       if (search) {
         const normalized = search.toLowerCase();
-        const lookupClients = clients || clientesRef.current;
         items = items.filter((item) => {
-          const cliente = lookupClients.find((client) => client.id === item.cliente_id);
-          const clienteNome = cliente?.nome?.toLowerCase() || "";
-          const clienteTelefone = cliente?.telefone?.toLowerCase() || "";
+          const clienteNome = (item.cliente_nome || "").toLowerCase();
+          const telefone = (item.telefone || "").toLowerCase();
+          const protocolo = (item.protocolo || "").toLowerCase();
+          const observacao = (item.observacao || "").toLowerCase();
           return (
             clienteNome.includes(normalized) ||
-            clienteTelefone.includes(normalized) ||
-            item.observacao?.toLowerCase().includes(normalized)
+            telefone.includes(normalized) ||
+            protocolo.includes(normalized) ||
+            observacao.includes(normalized)
           );
         });
       }
@@ -220,14 +266,13 @@ export function useAgendamentos() {
       setError(null);
 
       try {
-        const loadedClientes = await loadClientes();
         await Promise.all([loadAtendentes(), loadServicos()]);
-        await loadAgendamentos(filter, search, loadedClientes);
+        await loadAgendamentos(filter, search);
       } finally {
         setLoading(false);
       }
     },
-    [loadAtendentes, loadClientes, loadServicos, loadAgendamentos]
+    [loadAtendentes, loadServicos, loadAgendamentos]
   );
 
   useEffect(() => {
@@ -311,9 +356,10 @@ export function useAgendamentos() {
 
     const atendente = await findBestAtendente();
     const values = {
-      cliente_id: payload.cliente_id,
+      cliente_nome: payload.cliente_nome || null,
+      telefone: payload.telefone || null,
       servico_id: payload.servico_id,
-      area: getAreaFromBairro(payload.bairro) || payload.area || null,
+      area: payload.area || getAreaFromBairro(payload.bairro) || null,
       bairro: payload.bairro || null,
       data_agendamento: payload.data_agendamento,
       hora_agendamento: payload.hora_agendamento,
@@ -335,27 +381,36 @@ export function useAgendamentos() {
     return data;
   }
 
-  async function updateAgendamento(id, payload) {
-    setLoading(true);
-    setError(null);
+ async function updateAgendamento(id, payload) {
+   setLoading(true);
+   setError(null);
 
-    const { data, error } = await supabase
-      .from("agendamentos")
-      .update({ ...payload, updated_at: new Date().toISOString() })
-      .eq("id", id)
-      .select()
-      .single();
+    const antigoResponse = await supabase.from("agendamentos").select("*").eq("id", id).single();
+    const antigo = antigoResponse.error ? null : antigoResponse.data;
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return null;
+   const { data, error } = await supabase
+     .from("agendamentos")
+     .update({ ...payload, updated_at: new Date().toISOString() })
+     .eq("id", id)
+     .select()
+     .single();
+
+   if (error) {
+     setError(error.message);
+     setLoading(false);
+     return null;
+   }
+
+    const campos = diffCampos(antigo || {}, payload || {});
+    if (campos.length > 0) {
+      const descricao = campos.map((c) => c.campo + ": " + c.de + " -> " + c.para).join("; ");
+      await registrarHistorico({ agendamentoId: id, acao: "edicao", descricao: descricao, camposAlterados: campos });
     }
 
-      await loadAgendamentos(filterRef.current);
-    setLoading(false);
-    return data;
-  }
+     await loadAgendamentos(filterRef.current);
+   setLoading(false);
+   return data;
+ }
 
   async function cancelAgendamentos(ids = []) {
     if (!ids || ids.length === 0) return;
@@ -368,11 +423,14 @@ export function useAgendamentos() {
       .update({ status: "cancelado", updated_at: new Date().toISOString() })
       .in("id", ids);
 
-    if (error) {
-      setError(error.message);
-    } else {
-      await loadAgendamentos(filterRef.current);
-    }
+   if (error) {
+     setError(error.message);
+   } else {
+      for (const id of ids) {
+        await registrarHistorico({ agendamentoId: id, acao: "cancelamento", descricao: "Status alterado para Cancelado", camposAlterados: [{ campo: "Status", de: "Ativo", para: "Cancelado" }] });
+      }
+     await loadAgendamentos(filterRef.current);
+   }
 
     setLoading(false);
   }
@@ -399,7 +457,7 @@ export function useAgendamentos() {
     const agendamento = agendamentoResponse.data;
     const deAtendente = atendentes.find((user) => user.id === agendamento.criado_por);
     const paraAtendente = atendentes.find((user) => user.id === paraAtendenteId);
-    const nota = `ReatribuÃ­do de ${deAtendente?.nome || "desconhecido"} para ${paraAtendente?.nome || "desconhecido"}: ${motivo}`;
+    const nota = `Reatribuido de ${deAtendente?.nome || "desconhecido"} para ${paraAtendente?.nome || "desconhecido"}: ${motivo}`;
     const observacaoAtual = agendamento.observacao ? `${agendamento.observacao}\n${nota}` : nota;
 
     const { error } = await supabase
@@ -411,16 +469,23 @@ export function useAgendamentos() {
       })
       .eq("id", id);
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return null;
-    }
+   if (error) {
+     setError(error.message);
+     setLoading(false);
+     return null;
+   }
 
-      await loadAgendamentos(filterRef.current);
-    setLoading(false);
-    return true;
-  }
+    await registrarHistorico({
+      agendamentoId: id,
+      acao: "reatribuicao",
+      descricao: nota,
+      camposAlterados: [{ campo: "Atendente", de: deAtendente?.nome || "desconhecido", para: paraAtendente?.nome || "desconhecido" }],
+    });
+
+     await loadAgendamentos(filterRef.current);
+   setLoading(false);
+   return true;
+ }
 
   async function reatribuirAgendamentos(ids = [], paraAtendenteId, motivo) {
     if (!ids.length || !paraAtendenteId || !motivo?.trim()) return null;
@@ -442,31 +507,41 @@ export function useAgendamentos() {
     const now = new Date().toISOString();
     const results = await Promise.all((selected || []).map((item) => {
       const source = atendentes.find((user) => user.id === item.criado_por);
-      const note = `ReatribuÃ­do de ${source?.nome || "desconhecido"} para ${target?.nome || "desconhecido"}: ${motivo.trim()}`;
+      const note = `Reatribuido de ${source?.nome || "desconhecido"} para ${target?.nome || "desconhecido"}: ${motivo.trim()}`;
       return supabase.from("agendamentos").update({
         criado_por: paraAtendenteId,
         observacao: item.observacao ? `${item.observacao}\n${note}` : note,
         updated_at: now,
       }).eq("id", item.id);
     }));
-    const failed = results.find((result) => result.error);
-    if (failed?.error) {
-      setError(failed.error.message);
-      setLoading(false);
-      return null;
+   const failed = results.find((result) => result.error);
+   if (failed?.error) {
+     setError(failed.error.message);
+     setLoading(false);
+     return null;
+   }
+
+    for (const item of selected || []) {
+      const source = atendentes.find((user) => user.id === item.criado_por);
+      const note = "Reatribuido de " + (source?.nome || "desconhecido") + " para " + (target?.nome || "desconhecido") + ": " + motivo.trim();
+      await registrarHistorico({
+        agendamentoId: item.id,
+        acao: "reatribuicao",
+        descricao: note,
+        camposAlterados: [{ campo: "Atendente", de: source?.nome || "desconhecido", para: target?.nome || "desconhecido" }],
+      });
     }
 
-      await loadAgendamentos(filterRef.current);
-    setLoading(false);
-    return true;
-  }
+     await loadAgendamentos(filterRef.current);
+   setLoading(false);
+   return true;
+ }
 
   return {
     session,
     profile,
     agendamentos,
     atendentes,
-    clientes,
     servicos,
     loading,
     error,

@@ -1,16 +1,19 @@
-﻿import { useAgendamentosContext } from "../hooks/useAgendamentosContext";
+import { useAgendamentosContext } from "../hooks/useAgendamentosContext";
 import ImportPreview from "../components/ImportPreview";
 import ImportResultModal from "../components/ImportResultModal";
 import ImportUpload from "../components/ImportUpload";
 import { useImportacao } from "../hooks/useImportacao";
 import { useGoogleSheets } from "../hooks/useGoogleSheets";
 import Header from "../components/layout/Header";
-import { FaSync, FaGoogle, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
+import { useState } from "react";
+import { FaSync, FaGoogle, FaCheckCircle, FaExclamationTriangle, FaClock } from "react-icons/fa";
+import Toast from "../components/Toast";
 
 export default function Importar() {
   const { profile } = useAgendamentosContext();
+  const [syncFeedback, setSyncFeedback] = useState(null);
   const { fileName, uploadDate, rowCount, previewRows, validationError, loading, processing, progress, report, showReport, error, handleFileChange, processImport, cancelImport, resetState } = useImportacao();
-  const { loading: sheetsLoading, error: sheetsError, rows: sheetsRows, syncedAt, fetchFromAPI, syncToSupabase } = useGoogleSheets();
+  const { loading: sheetsLoading, error: sheetsError, rows: sheetsRows, syncedAt, autoSyncing, lastAutoSync, fetchFromAPI, syncToSupabase } = useGoogleSheets();
 
   const handleSyncFromSheets = async () => {
     await fetchFromAPI();
@@ -19,13 +22,13 @@ export default function Importar() {
   const handleSyncToDB = async () => {
     const result = await syncToSupabase();
     if (result) {
-      alert(`Sincronizado: ${result.synced} registros. Erros: ${result.errors}`);
+      setSyncFeedback({ message: `Atualizados: ${result.synced} | Ignorados: ${result.skipped || 0} | Erros: ${result.errors}`, type: result.errors > 0 ? "warning" : "success" });
     }
   };
 
   return (
     <>
-      <Header title="Importar" subtitle="Importe dados de planilhas ou sincronize com Google Sheets" profile={profile} />
+      <Header title="Importar" subtitle="Atualize registros existentes via planilha" profile={profile} />
       <div className="page-anim flex-1 overflow-y-auto">
         <div className="mx-auto w-full min-w-0 max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
 
@@ -37,8 +40,22 @@ export default function Importar() {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-slate-900">Sincronizar com Google Sheets</h2>
-                <p className="text-xs text-slate-400">Puxe dados atualizados da planilha de acompanhamento</p>
+                <p className="text-xs text-slate-400">Atualiza registros existentes no sistema com dados da planilha de acompanhamento</p>
               </div>
+            </div>
+
+            {/* Status do Auto-sync */}
+            <div className="mb-4 flex items-center gap-2 rounded-xl bg-primary-50 border border-primary-200 px-4 py-3">
+              <FaClock size={14} className="text-primary-600" />
+              <span className="text-sm text-primary-700">
+                <strong>Auto-sync ativo:</strong> Sincroniza a cada 5 minutos
+              </span>
+              {autoSyncing && (
+                <span className="ml-auto flex items-center gap-2 text-xs text-primary-600">
+                  <FaSync size={12} className="animate-spin" />
+                  Sincronizando...
+                </span>
+              )}
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -48,7 +65,7 @@ export default function Importar() {
                 className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 transition-all duration-200 disabled:opacity-50 active:scale-[0.98]"
               >
                 <FaSync size={14} className={sheetsLoading ? "animate-spin" : ""} />
-                {sheetsLoading ? "Sincronizando..." : "Buscar da Planilha"}
+                {sheetsLoading ? "Atualizando..." : "Atualizar do Sistema"}
               </button>
 
               {sheetsRows.length > 0 && (
@@ -58,14 +75,14 @@ export default function Importar() {
                   className="inline-flex items-center gap-2 rounded-xl bg-success-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-success-700 transition-all duration-200 disabled:opacity-50 active:scale-[0.98]"
                 >
                   <FaCheckCircle size={14} />
-                  Salvar no Sistema ({sheetsRows.length} registros)
+                  Atualizar Registros ({sheetsRows.length})
                 </button>
               )}
             </div>
 
-            {syncedAt && (
+            {(syncedAt || lastAutoSync) && (
               <p className="mt-3 text-xs text-slate-400">
-                Última sincronização: {syncedAt.toLocaleString("pt-BR")}
+                Ultima sincronizacao: {lastAutoSync ? lastAutoSync.toLocaleString("pt-BR") : syncedAt?.toLocaleString("pt-BR")}
               </p>
             )}
 
@@ -85,26 +102,25 @@ export default function Importar() {
                       <th className="px-3 py-2 text-left font-semibold text-slate-500">Cliente</th>
                       <th className="px-3 py-2 text-left font-semibold text-slate-500">Status</th>
                       <th className="px-3 py-2 text-left font-semibold text-slate-500">Data</th>
-                      <th className="px-3 py-2 text-left font-semibold text-slate-500">Atendente</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {sheetsRows.slice(0, 20).map((row, i) => (
                       <tr key={i} className="hover:bg-slate-50">
-                        <td className="px-3 py-2 font-mono font-semibold text-slate-700">{row.protocolo || "—"}</td>
-                        <td className="px-3 py-2 text-slate-600 max-w-[200px] truncate">{row.cliente_nome || "—"}</td>
+                        <td className="px-3 py-2 font-mono font-semibold text-slate-700">{row.protocolo || "---"}</td>
+                        <td className="px-3 py-2 text-slate-600 max-w-[200px] truncate">{row.cliente_nome || "---"}</td>
                         <td className="px-3 py-2">
                           <span className={`inline-flex rounded-lg px-2 py-0.5 text-xs font-bold ${
                             row.status === "finalizado" ? "bg-success-50 text-success-700" :
                             row.status === "em_andamento" ? "bg-warning-50 text-warning-700" :
                             row.status === "cancelado" ? "bg-danger-50 text-danger-700" :
+                            row.status === "nao_concluido" ? "bg-slate-100 text-slate-600" :
                             "bg-primary-50 text-primary-700"
                           }`}>
-                            {row.status || "—"}
+                            {row.status || "---"}
                           </span>
                         </td>
-                        <td className="px-3 py-2 text-slate-500">{row.data_agendamento || "—"}</td>
-                        <td className="px-3 py-2 text-slate-500">{row.atendente_nome || "—"}</td>
+                        <td className="px-3 py-2 text-slate-500">{row.data_agendamento || "---"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -132,10 +148,10 @@ export default function Importar() {
                 <h3 className="text-sm font-bold text-slate-700 mb-3">Como funciona</h3>
                 <ul className="space-y-3 text-xs text-slate-600 leading-relaxed">
                   {[
-                    "Faça upload de um arquivo .xlsx ou .xls com seus chamados.",
-                    "O sistema valida colunas obrigatórias e mapeia nomes automaticamente.",
-                    "Registros novos são criados, existentes atualizados.",
-                    "Você recebe um relatório detalhado com sucesso e erros.",
+                    "Fac\u00e7a upload de um arquivo .xlsx ou .xls com seus chamados.",
+                    "O sistema valida colunas obrigatorias e mapeia nomes automaticamente.",
+                    "Apenas registros existentes sao atualizados.",
+                    "Voce recebe um relatorio detalhado com sucesso e erros.",
                   ].map((text, i) => (
                     <li key={i} className="flex gap-2">
                       <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-md bg-primary-50 text-primary text-2xs font-bold">{i + 1}</span>
@@ -148,6 +164,9 @@ export default function Importar() {
           </div>
 
           {showReport && <ImportResultModal report={report} onClose={resetState} />}
+          {syncFeedback && (
+            <div className="fixed top-4 right-4 z-[100]"><Toast message={syncFeedback.message} type={syncFeedback.type} onClose={() => setSyncFeedback(null)} /></div>
+          )}
         </div>
       </div>
     </>

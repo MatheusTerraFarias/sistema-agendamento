@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase, supabaseConfigured, supabaseConfigIssue } from "../lib/supabase";
 import { Navigate, useNavigate } from "react-router-dom";
 
 export default function Login() {
@@ -17,6 +17,11 @@ export default function Login() {
   useEffect(() => {
     let mounted = true;
     async function verifySession() {
+      if (!supabaseConfigured) {
+        if (mounted) setSessionChecked(true);
+        return;
+      }
+
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!mounted) return;
@@ -39,6 +44,12 @@ export default function Login() {
       setLoginError("Informe e-mail e senha para entrar.");
       return;
     }
+    if (!supabaseConfigured) {
+      setLoginError(`Supabase não está configurado corretamente: ${supabaseConfigIssue} Verifique o arquivo .env.local e reinicie o servidor.`);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setLoginError("");
     try {
@@ -72,11 +83,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 sm:p-10">
           <div className="flex flex-col items-center mb-8">
-            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-primary-600 flex items-center justify-center mb-5 shadow-lg shadow-primary/20">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-white">
-                <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
+            <img src="/favicon.png" alt="Logo" className="mb-5 h-20 w-auto object-contain" />
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Bem-vindo de volta</h1>
             <p className="text-sm text-slate-400 mt-1.5">Entre com suas credenciais para continuar</p>
           </div>
@@ -125,6 +132,11 @@ export default function Login() {
             {loginError && (
               <div className="rounded-xl bg-danger-50 border border-danger-200 px-4 py-3 text-sm text-danger-700 font-medium">
                 {loginError}
+              </div>
+            )}
+            {!supabaseConfigured && (
+              <div className="rounded-xl bg-warning-50 border border-warning-200 px-4 py-3 text-sm text-warning-700 font-medium">
+                Supabase não está configurado corretamente. Verifique <code>.env.local</code> e reinicie o servidor.
               </div>
             )}
 

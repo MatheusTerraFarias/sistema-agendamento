@@ -1,19 +1,8 @@
 ﻿import { useCallback, useMemo, useState } from "react";
-import { FaEdit, FaExchangeAlt, FaTimesCircle, FaCheck, FaSearch } from "react-icons/fa";
+import { FaExchangeAlt, FaTimesCircle, FaCheck, FaSearch } from "react-icons/fa";
+import { STATUS_LABELS, STATUS_BADGES } from "../lib/statusOptions";
 
-const STATUS_LABELS = {
-  novo: "Novo",
-  em_andamento: "Em andamento",
-  finalizado: "Finalizado",
-  cancelado: "Cancelado",
-};
 
-const STATUS_BADGES = {
-  novo: "bg-primary-50 text-primary-700 ring-1 ring-primary-200/60",
-  em_andamento: "bg-warning-50 text-warning-700 ring-1 ring-warning-200/60",
-  finalizado: "bg-success-50 text-success-700 ring-1 ring-success-200/60",
-  cancelado: "bg-danger-50 text-danger-700 ring-1 ring-danger-200/60",
-};
 
 function SkeletonRow() {
   return (
@@ -32,7 +21,7 @@ function SkeletonRow() {
   );
 }
 
-export default function AgendamentosTable({ agendamentos, loading, onEdit, onCancel, onReatribuir, isSupervisor, onBulkAction, onBulkReatribuir }) {
+export default function AgendamentosTable({ agendamentos, loading, onEdit, onCancel, onReatribuir, onOpenOrdem, isSupervisor, onBulkAction, onBulkReatribuir }) {
   const [selectedIds, setSelectedIds] = useState(new Set());
 
   const allSelected = useMemo(
@@ -63,7 +52,7 @@ export default function AgendamentosTable({ agendamentos, loading, onEdit, onCan
         <table className="w-full min-w-[1020px] border-collapse text-sm">
           <thead className="bg-slate-50/80 border-b border-slate-200">
             <tr>
-              {["", "OS", "Cliente", "Telefone", "Data", "Hora", "Status", "Bairro", "Atendente", "Ações"].map((h) => (
+              {["", "OS", "Cliente", "Telefone", "Data", "Hora", "Status", "Bairro", "Atendente", "Acoes"].map((h) => (
                 <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
               ))}
             </tr>
@@ -124,7 +113,7 @@ export default function AgendamentosTable({ agendamentos, loading, onEdit, onCan
                     aria-label="Selecionar todos"
                   />
                 </th>
-                {["OS", "Cliente", "Telefone", "Data", "Hora", "Status", "Bairro", "Atendente", "Ações"].map((h) => (
+                {["OS", "Cliente", "Telefone", "Data", "Hora", "Status", "Bairro", "Atendente", "Acoes"].map((h) => (
                   <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
@@ -146,31 +135,33 @@ export default function AgendamentosTable({ agendamentos, loading, onEdit, onCan
                       aria-label={`Selecionar ${item.cliente_nome}`}
                     />
                   </td>
-                  <td className="px-5 py-3.5 text-slate-700 font-mono text-xs font-semibold max-w-[120px] truncate">{item.protocolo || "—"}</td>
-                  <td className="px-5 py-3.5 font-semibold text-slate-800 max-w-[200px] truncate">{item.cliente_nome || "—"}</td>
-                  <td className="px-5 py-3.5 text-slate-500 max-w-[160px] truncate">{item.telefone || "—"}</td>
-                  <td className="px-5 py-3.5 text-slate-600 tabular-nums">
-                    {item.data_agendamento ? new Date(item.data_agendamento + "T12:00:00").toLocaleDateString("pt-BR") : "—"}
+                  <td className="px-5 py-3.5 max-w-[120px]">
+                    <button
+                      type="button"
+                      onClick={() => onOpenOrdem?.(item)}
+                      className="font-mono text-xs font-bold text-primary-700 hover:text-primary-900 hover:underline truncate max-w-[120px] text-left"
+                      title="Abrir ordem"
+                    >
+                      {item.protocolo || item.id || "-"}
+                    </button>
                   </td>
-                  <td className="px-5 py-3.5 text-slate-600 tabular-nums">{item.hora_agendamento || "—"}</td>
+                  <td className="px-5 py-3.5 font-semibold text-slate-800 max-w-[200px] truncate">{item.cliente_nome || "-"}</td>
+                  <td className="px-5 py-3.5 text-slate-500 max-w-[160px] truncate">{item.telefone || "-"}</td>
+                  <td className="px-5 py-3.5 text-slate-600 tabular-nums">
+                    {item.data_agendamento ? new Date(item.data_agendamento + "T12:00:00").toLocaleDateString("pt-BR") : "-"}
+                  </td>
+                  <td className="px-5 py-3.5 text-slate-600 tabular-nums">{item.hora_agendamento || "-"}</td>
                   <td className="px-5 py-3.5">
                     <span className={`inline-flex rounded-lg px-2.5 py-1 text-xs font-bold ${STATUS_BADGES[item.status] || "bg-slate-100 text-slate-600"}`}>
-                      {STATUS_LABELS[item.status] || "—"}
+                      {STATUS_LABELS[item.status] || "-"}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5 text-slate-500 text-xs max-w-[140px] truncate">{item.bairro || "—"}</td>
-                  <td className="px-5 py-3.5 text-slate-500 text-xs max-w-[120px] truncate">{item.atendente_nome || "—"}</td>
+                  <td className="px-5 py-3.5 text-slate-500 text-xs max-w-[140px] truncate">{item.bairro || "-"}</td>
+                  <td className="px-5 py-3.5 text-slate-500 text-xs max-w-[120px] truncate">{item.atendente_nome || "-"}</td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => onEdit(item)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-slate-800 active:scale-95 transition-all duration-150"
-                        title="Editar"
-                      >
-                        <FaEdit size={11} /> Editar
-                      </button>
-                      {item.status !== "cancelado" && (
+                      
+                      {isSupervisor && item.status !== "cancelado" && (
                         <button
                           type="button"
                           onClick={() => onCancel(item.id)}

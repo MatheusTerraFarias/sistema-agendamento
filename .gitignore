@@ -25,6 +25,7 @@ dist-ssr
 
 # Credenciais da conta de servi?o (Google Sheets)
 projeto-prazos-496410-6c1930ca2d99.json
+public/service-account.json
 
 .env
 .env.*

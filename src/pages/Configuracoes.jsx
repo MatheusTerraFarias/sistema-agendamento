@@ -4,7 +4,7 @@ import { StatCard } from "../components/ui/Card";
 import Card from "../components/ui/Card";
 import Header from "../components/layout/Header";
 import Toast from "../components/Toast";
-import { FaUsers, FaCog, FaUserShield, FaCalendarAlt, FaTrash } from "react-icons/fa";
+import { FaCog, FaUserShield, FaCalendarAlt, FaTrash } from "react-icons/fa";
 
 const ROLE_OPTIONS = [
   { value: "atendente", label: "Atendente" },
@@ -23,7 +23,7 @@ export default function Configuracoes() {
   const [message, setMessage] = useState("");
   const [creating, setCreating] = useState(false);
 
-  const { session, profile, atendentes, clientes, servicos, agendamentos, loading, error, isSupervisor, loadAll, createUsuario, deleteUsuario } = useAgendamentosContext();
+  const { session, profile, atendentes, servicos, agendamentos, loading, error, isSupervisor, loadAll, createUsuario, deleteUsuario } = useAgendamentosContext();
 
   useEffect(() => {
     if (!session || !profile) return;
@@ -43,8 +43,8 @@ export default function Configuracoes() {
   };
 
   const stats = useMemo(() => ({
-    clientes: clientes.length, servicos: servicos.length, atendentes: atendentes.length, agendamentos: agendamentos.length,
-  }), [clientes.length, servicos.length, atendentes.length, agendamentos.length]);
+    servicos: servicos.length, atendentes: atendentes.length, agendamentos: agendamentos.length,
+  }), [servicos.length, atendentes.length, agendamentos.length]);
 
   const handleDeleteUsuario = async (userId, nome) => {
     if (!window.confirm("Excluir o perfil de " + nome + "? Essa ação não pode ser desfeita.")) return;
@@ -60,7 +60,6 @@ export default function Configuracoes() {
       <div className="page-anim flex-1 overflow-y-auto">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard label="Clientes" value={loading ? "—" : stats.clientes} icon={<FaUsers size={18} />} iconColor="text-primary" />
             <StatCard label="Serviços" value={loading ? "—" : stats.servicos} icon={<FaCog size={18} />} iconColor="text-slate-600" />
             <StatCard label="Atendentes" value={loading ? "—" : stats.atendentes} icon={<FaUserShield size={18} />} iconColor="text-warning-600" />
             <StatCard label="Agendamentos" value={loading ? "—" : stats.agendamentos} icon={<FaCalendarAlt size={18} />} iconColor="text-success-600" />
